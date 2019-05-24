@@ -103,7 +103,7 @@ func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
 	return func() edgex.Inspect {
 		devices := make([]edgex.Device, doorCount*2)
 		for d := 0; d < doorCount; d++ {
-			devices[d] = deviceOf(d+1, dongk.DirectIn)
+			devices[d*2] = deviceOf(d+1, dongk.DirectIn)
 			devices[d*2+1] = deviceOf(d+1, dongk.DirectOut)
 		}
 		return edgex.Inspect{
