@@ -25,7 +25,7 @@ func main() {
 func trigger(ctx edgex.Context) error {
 	config := ctx.LoadConfig()
 	triggerName := value.Of(config["Name"]).String()
-	topic := value.Of(config["Topic"]).String()
+	eventTopic := value.Of(config["Topic"]).String()
 
 	boardOpts := value.Of(config["BoardOptions"]).MustMap()
 	serialNumber := uint32(value.Of(boardOpts["serialNumber"]).MustInt64())
@@ -33,8 +33,8 @@ func trigger(ctx edgex.Context) error {
 
 	trigger := ctx.NewTrigger(edgex.TriggerOptions{
 		Name:        triggerName,
-		Topic:       topic,
-		InspectFunc: inspectFunc(serialNumber, int(doorCount)),
+		Topic:       eventTopic,
+		InspectFunc: inspectFunc(serialNumber, int(doorCount), eventTopic),
 	})
 
 	var server evio.Events
@@ -90,14 +90,15 @@ func trigger(ctx edgex.Context) error {
 	return evio.Serve(server, address...)
 }
 
-func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
+func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspect {
 	deviceOf := func(doorId, direct int) edgex.Device {
 		directName := dongk.DirectName(byte(direct))
 		return edgex.Device{
-			Name:    fmt.Sprintf(deviceAddr, sn, doorId, directName),
-			Virtual: true,
-			Desc:    fmt.Sprintf("%d号门%s读卡器", doorId, directName),
-			Command: "AT",
+			Name:       fmt.Sprintf(deviceAddr, sn, doorId, directName),
+			Desc:       fmt.Sprintf("%d号门%s读卡器", doorId, directName),
+			Type:       edgex.DeviceTypeTrigger,
+			Virtual:    true,
+			EventTopic: eventTopic,
 		}
 	}
 	return func() edgex.Inspect {
@@ -107,9 +108,11 @@ func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
 			devices[d*2+1] = deviceOf(d+1, dongk.DirectOut)
 		}
 		return edgex.Inspect{
-			OS:      runtime.GOOS,
-			Arch:    runtime.GOARCH,
-			Devices: devices,
+			HostOS:     runtime.GOOS,
+			HostArch:   runtime.GOARCH,
+			Vendor:     dongk.VendorName,
+			DriverName: dongk.DriverName,
+			Devices:    devices,
 		}
 	}
 }

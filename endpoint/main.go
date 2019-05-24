@@ -97,8 +97,9 @@ func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
 	deviceOf := func(doorId int) edgex.Device {
 		return edgex.Device{
 			Name:    fmt.Sprintf("ENDPOINT/%d/%d", sn, doorId),
-			Virtual: true,
 			Desc:    fmt.Sprintf("%d号门/控制开关", doorId),
+			Type:    edgex.DeviceTypeEndpoint,
+			Virtual: true,
 			Command: fmt.Sprintf("AT+OPEN=%d", doorId),
 		}
 	}
@@ -108,9 +109,11 @@ func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
 			devices[d] = deviceOf(d + 1)
 		}
 		return edgex.Inspect{
-			OS:      runtime.GOOS,
-			Arch:    runtime.GOARCH,
-			Devices: devices,
+			HostOS:     runtime.GOOS,
+			HostArch:   runtime.GOARCH,
+			Vendor:     dongk.VendorName,
+			DriverName: dongk.DriverName,
+			Devices:    devices,
 		}
 	}
 }
