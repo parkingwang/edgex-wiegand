@@ -8,7 +8,4 @@ COPY edgex-trigger-dongkong /bin/
 
 ONBUILD COPY application.toml /etc/edgex/
 
-# 端口参考配置文件的通讯端口
-ONBUILD EXPOSE 5570
-
 CMD ["edgex-trigger-dongkong"]
