@@ -14,8 +14,8 @@ import (
 //
 
 const (
-	// 设备地址格式：　TRIGGER/SN/DOOR_ID/DIRECT
-	deviceAddr = "TRIGGER/%d/%d/%s"
+	// 设备地址格式：　TRIGGER-SN-DOOR_ID-DIRECT
+	deviceAddr = "TRIGGER-%d-%d-%s"
 )
 
 func main() {
@@ -95,7 +95,7 @@ func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspe
 		directName := dongk.DirectName(byte(direct))
 		return edgex.Device{
 			Name:       fmt.Sprintf(deviceAddr, sn, doorId, directName),
-			Desc:       fmt.Sprintf("%d号门%s读卡器", doorId, directName),
+			Desc:       fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
 			Type:       edgex.DeviceTypeTrigger,
 			Virtual:    true,
 			EventTopic: eventTopic,
