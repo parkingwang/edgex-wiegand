@@ -5,6 +5,7 @@ Topic = "dongkong/events"
 # 东控主板配置参数
 [BoardOptions]
   serialNumber = 123456
+  doorCount = 4
 
 # SocketServer配置参数
 [SocketServerOptions]

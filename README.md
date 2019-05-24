@@ -20,7 +20,7 @@ Broadcast = false
 
 # Socket客户端配置参数
 [SocketClientOptions]
-  remoteAddress = "board.dongk.edge.irain.pro:60000"
+  remoteAddress = "board.dongk.edgex.io:60000"
   readTimeout = "1s"
   writeTimeout = "1s"
 ```
