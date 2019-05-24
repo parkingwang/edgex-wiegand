@@ -5,7 +5,7 @@ BUILD_ARCH=$(shell echo ${OSARCH})
 BUILD_ENV?=CGO_ENABLED=0 GOOS=linux GOARCH=${BUILD_ARCH}
 
 IMAGE_TAG?=201905.1-${BUILD_ARCH}
-IMAGE_ORG?=registry.cn-shenzhen.aliyuncs.com/nextabc
+IMAGE_ORG?=registry.cn-shenzhen.aliyuncs.com/edge-x
 IMAGE_NAME=${IMAGE_ORG}/${BINARY}:${IMAGE_TAG}
 
 

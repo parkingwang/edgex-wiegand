@@ -1,1 +1,1 @@
-edgex-trigger-dongkong
+trigger-dongkong
