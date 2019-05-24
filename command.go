@@ -3,7 +3,7 @@ package dongk
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/nextabc-lab/edgex-go"
+	"github.com/yoojia/go-bytes"
 )
 
 //
@@ -55,14 +55,14 @@ type Command struct {
 
 func (dk *Command) Bytes() []byte {
 	// 东控数据包使用小字节序
-	br := edgex.NewByteWriter(binary.LittleEndian)
-	br.PutByte(dk.Magic)
-	br.PutByte(dk.FuncId)
-	br.PutUint16(dk.reversed)
-	br.PutUint32(dk.SerialNum)
-	br.PutBytes(dk.Data[:])
-	br.PutUint32(dk.SeqId)
-	br.PutBytes(dk.Extra[:])
+	br := bytes.NewWriter(binary.LittleEndian)
+	br.NextByte(dk.Magic)
+	br.NextByte(dk.FuncId)
+	br.NextUint16(dk.reversed)
+	br.NextUint32(dk.SerialNum)
+	br.NextBytes(dk.Data[:])
+	br.NextUint32(dk.SeqId)
+	br.NextBytes(dk.Extra[:])
 	return br.Bytes()
 }
 
@@ -101,16 +101,16 @@ func ParseCommand(frame []byte) (*Command, error) {
 	if len(frame) < 9 {
 		return nil, errors.New("invalid bytes len")
 	}
-	br := edgex.WrapByteReader(frame, binary.LittleEndian)
-	magic := br.GetByte()
-	funId := br.GetByte()
-	reserved := br.GetUint16()
-	serialNum := br.GetUint32()
+	br := bytes.WrapReader(frame, binary.LittleEndian)
+	magic := br.NextByte()
+	funId := br.NextByte()
+	reserved := br.NextUint16()
+	serialNum := br.NextUint32()
 	data := [32]byte{}
-	copy(data[:], br.GetBytesSize(32))
-	seqId := br.GetUint32()
+	copy(data[:], br.NextBytes(32))
+	seqId := br.NextUint32()
 	extra := [20]byte{}
-	copy(extra[:], br.GetBytesSize(20))
+	copy(extra[:], br.NextBytes(20))
 	return NewCommand0(
 		magic,
 		funId,

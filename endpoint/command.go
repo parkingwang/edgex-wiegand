@@ -5,8 +5,8 @@ import (
 	"errors"
 	"github.com/albenik/bcd"
 	dongk "github.com/nextabc-lab/edgex-dongkong"
-	"github.com/nextabc-lab/edgex-go"
 	"github.com/yoojia/go-at"
+	"github.com/yoojia/go-bytes"
 	"strconv"
 )
 
@@ -54,14 +54,14 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 			return nil, errors.New("INVALID_CARD:" + args[0])
 		}
 		data := [32]byte{}
-		w := edgex.WrapByteWriter(data[:], binary.LittleEndian)
-		w.PutUint32(uint32(card))
-		w.PutBytes(getDateAt(args, 1, 20190101))
-		w.PutBytes(getDateAt(args, 2, 20291231)) // 20290101
-		w.PutByte(byte(getIntAt(args, 3, 0)))
-		w.PutByte(byte(getIntAt(args, 4, 0)))
-		w.PutByte(byte(getIntAt(args, 5, 0)))
-		w.PutByte(byte(getIntAt(args, 6, 0)))
+		w := bytes.WrapWriter(data[:], binary.LittleEndian)
+		w.NextUint32(uint32(card))
+		w.NextBytes(getDateAt(args, 1, 20190101))
+		w.NextBytes(getDateAt(args, 2, 20291231)) // 20290101
+		w.NextByte(byte(getIntAt(args, 3, 0)))
+		w.NextByte(byte(getIntAt(args, 4, 0)))
+		w.NextByte(byte(getIntAt(args, 5, 0)))
+		w.NextByte(byte(getIntAt(args, 6, 0)))
 		return dongk.NewCommand(dongk.FunIdCardAdd, broadSN, 0, data).Bytes(),
 			nil
 	}
@@ -75,8 +75,8 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 			return nil, errors.New("INVALID_CARD:" + args[0])
 		}
 		data := [32]byte{}
-		w := edgex.WrapByteWriter(data[:], binary.LittleEndian)
-		w.PutUint32(uint32(card))
+		w := bytes.WrapWriter(data[:], binary.LittleEndian)
+		w.NextUint32(uint32(card))
 		return dongk.NewCommand(dongk.FunIdCardDel, broadSN, 0, data).Bytes(),
 			nil
 	})
