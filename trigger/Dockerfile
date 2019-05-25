@@ -1,5 +1,5 @@
-ARG BUSYBOX_IMG=busybox
-FROM $BUSYBOX_IMG
+ARG IMAGE=scratch
+FROM $IMAGE
 
 LABEL MAINTAINER="yoojiachen@gmail.com"
 

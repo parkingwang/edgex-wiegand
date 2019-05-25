@@ -30,11 +30,7 @@ image: _build_image
 
 # 构建Image
 _build_image: build
-ifeq ("$(BUILD_ARCH)", "arm")
-	sudo docker build --build-arg BUSYBOX_IMG=arm32v7/busybox -t $(IMAGE_NAME) .
-else
-	sudo docker build --build-arg BUSYBOX_IMG=busybox:1.30.1 -t $(IMAGE_NAME) .
-endif
+	sudo docker build --build-arg IMAGE=scratch -t $(IMAGE_NAME) .
 
 # 推送Image到Registry
 push:
