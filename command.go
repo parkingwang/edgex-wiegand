@@ -10,6 +10,9 @@ import (
 // Author: 陈哈哈 chenyongjia@parkingwang.com, yoojiachen@gmail.com
 //
 
+// 传递指令时使用的字节顺序
+var ByteOrder = binary.LittleEndian
+
 const (
 	// 主板状态
 	FunIdBoardState = 0x20
@@ -55,7 +58,7 @@ type Command struct {
 
 func (dk *Command) Bytes() []byte {
 	// 东控数据包使用小字节序
-	br := bytes.NewWriter(binary.LittleEndian)
+	br := bytes.NewWriter(ByteOrder)
 	br.NextByte(dk.Magic)
 	br.NextByte(dk.FuncId)
 	br.NextUint16(dk.reversed)
@@ -101,7 +104,7 @@ func ParseCommand(frame []byte) (*Command, error) {
 	if len(frame) < 9 {
 		return nil, errors.New("invalid bytes len")
 	}
-	br := bytes.WrapReader(frame, binary.LittleEndian)
+	br := bytes.WrapReader(frame, ByteOrder)
 	magic := br.NextByte()
 	funId := br.NextByte()
 	reserved := br.NextUint16()

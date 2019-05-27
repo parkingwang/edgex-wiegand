@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"github.com/albenik/bcd"
 	dongk "github.com/nextabc-lab/edgex-dongkong"
@@ -47,36 +47,36 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 				}).Bytes(),
 			nil
 	})
-	// AT+ADD=CARD(uint32),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
+	// AT+ADD=CARD(hex),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
 	addHandler := func(args ...string) ([]byte, error) {
-		card, err := parseInt(args[0])
+		card, err := hex.DecodeString(args[0])
 		if nil != err {
 			return nil, errors.New("INVALID_CARD:" + args[0])
 		}
 		data := [32]byte{}
-		w := bytes.WrapWriter(data[:], binary.LittleEndian)
-		w.NextUint32(uint32(card))
-		w.NextBytes(getDateAt(args, 1, 20190101))
-		w.NextBytes(getDateAt(args, 2, 20291231)) // 20290101
-		w.NextByte(byte(getIntAt(args, 3, 0)))
-		w.NextByte(byte(getIntAt(args, 4, 0)))
-		w.NextByte(byte(getIntAt(args, 5, 0)))
-		w.NextByte(byte(getIntAt(args, 6, 0)))
+		w := bytes.WrapWriter(data[:], dongk.ByteOrder)
+		w.NextBytes(card)
+		w.NextBytes(getDateOrDefault(args, 1, 20190101))
+		w.NextBytes(getDateOrDefault(args, 2, 20291231)) // 20290101
+		w.NextByte(byte(getIntOrDefault(args, 3, 0)))
+		w.NextByte(byte(getIntOrDefault(args, 4, 0)))
+		w.NextByte(byte(getIntOrDefault(args, 5, 0)))
+		w.NextByte(byte(getIntOrDefault(args, 6, 0)))
 		return dongk.NewCommand(dongk.FunIdCardAdd, broadSN, 0, data).Bytes(),
 			nil
 	}
 	registry.AddX("ADD", 1, addHandler)
 	registry.Add("ADD0", addHandler)
 
-	// AT+DELETE=CARD(uint32)
+	// AT+DELETE=CARD(hex)
 	registry.AddX("DELETE", 1, func(args ...string) ([]byte, error) {
-		card, err := parseInt(args[0])
+		card, err := hex.DecodeString(args[0])
 		if nil != err {
 			return nil, errors.New("INVALID_CARD:" + args[0])
 		}
 		data := [32]byte{}
-		w := bytes.WrapWriter(data[:], binary.LittleEndian)
-		w.NextUint32(uint32(card))
+		w := bytes.WrapWriter(data[:], dongk.ByteOrder)
+		w.NextBytes(card)
 		return dongk.NewCommand(dongk.FunIdCardDel, broadSN, 0, data).Bytes(),
 			nil
 	})
@@ -88,7 +88,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	})
 }
 
-func getDateAt(args []string, idx int, def uint32) []byte {
+func getDateOrDefault(args []string, idx int, def uint32) []byte {
 	uintDate := def
 	if idx <= len(args)-1 {
 		strDate := args[idx]
@@ -101,7 +101,7 @@ func getDateAt(args []string, idx int, def uint32) []byte {
 	return bcd.FromUint32(uintDate)
 }
 
-func getIntAt(args []string, idx int, def uint32) uint32 {
+func getIntOrDefault(args []string, idx int, def uint32) uint32 {
 	if idx > len(args)-1 {
 		return def
 	} else {

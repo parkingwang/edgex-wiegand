@@ -67,7 +67,7 @@ Broadcast = false
 
 > AT+ADD={CARD},{START_DATE},{END_DATE},{DOOR1},{DOOR2},{DOOR3},{DOOR4}
 
-- `CARD` 卡号，uint32的卡号格式；
+- `CARD` 卡号，hex的卡号格式；
 - `START_DATE` 有效期开始日期，格式为 YYYYMMdd，如: 20190521
 - `END_DATE` 有效期结束日期，格式为 YYYYMMdd，如: 20190521
 - `DOOR1 - DOOR4` 门号1-4，设置为1表示有权限，设置为0表示无权限；
@@ -80,7 +80,7 @@ Broadcast = false
 
 > AT+DELETE={CARD}
 
-- `CARD` 卡号，uint32的卡号格式；
+- `CARD` 卡号，hex的卡号格式；
 
 #### AT+CLEAR - 清空授权
 
