@@ -21,9 +21,7 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, doorId, direct byte) {
 	reader := bytes.WrapReader(cmd.Data[:], dongk.ByteOrder)
 	json := jsonx.NewFatJSON()
 	json.Field("sn", cmd.SerialNum)
-	card := reader.NextBytes(4)
-	json.Field("card", dongk.ByteOrder.Uint32(card))
-	json.Field("cardHex", hex.EncodeToString(card))
+	json.Field("card", hex.EncodeToString(reader.NextBytes(4)))
 	reader.NextBytes(7) // 丢弃timestamp数据
 	json.Field("index", reader.NextUint32())
 	json.Field("type", reader.NextByte())
@@ -32,6 +30,5 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, doorId, direct byte) {
 	ioDirect := reader.NextByte()
 	json.Field("doorId", doorNo)
 	json.Field("direct", dongk.DirectName(ioDirect))
-	json.Field("reason", reader.NextByte())
 	return json.Bytes(), doorNo, ioDirect
 }
