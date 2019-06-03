@@ -11,7 +11,7 @@ import (
 // Author: 陈哈哈 chenyongjia@parkingwang.com, yoojiachen@gmail.com
 //
 
-func cmdToJSON(cmd *dongk.Command) (frames []byte, doorId, direct byte) {
+func cmdToJSON(cmd *dongk.Command) (frames []byte, card string, doorId, direct byte) {
 	// 控制指令数据：
 	// 0. 无记录
 	// 1. 刷卡消息
@@ -21,7 +21,8 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, doorId, direct byte) {
 	reader := bytes.WrapReader(cmd.Data[:], dongk.ByteOrder)
 	json := jsonx.NewFatJSON()
 	json.Field("sn", cmd.SerialNum)
-	json.Field("card", hex.EncodeToString(reader.NextBytes(4)))
+	card = hex.EncodeToString(reader.NextBytes(4))
+	json.Field("card", card)
 	reader.NextBytes(7) // 丢弃timestamp数据
 	json.Field("index", reader.NextUint32())
 	json.Field("type", reader.NextByte())
@@ -30,5 +31,5 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, doorId, direct byte) {
 	ioDirect := reader.NextByte()
 	json.Field("doorId", doorNo)
 	json.Field("direct", dongk.DirectName(ioDirect))
-	return json.Bytes(), doorNo, ioDirect
+	return json.Bytes(), card, doorNo, ioDirect
 }

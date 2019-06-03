@@ -16,8 +16,6 @@ github.com/golang/protobuf v1.3.1 h1:YF8+flBXS5eO826T4nzqPrxfhQThhXl0YzfuUPu4SBg
 github.com/golang/protobuf v1.3.1/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/kavu/go_reuseport v1.4.0 h1:YIp/96RZ3sJfn0LN+FFkkXIq3H3dfVOdRUtNejhDcxc=
 github.com/kavu/go_reuseport v1.4.0/go.mod h1:CG8Ee7ceMFSMnx/xr25Vm0qXaj2Z4i5PWoUx+JZ5/CU=
-github.com/nextabc-lab/edgex-go v1.1.6 h1:aiibTgz2UQLBiAgpDeIqI+jHzt2AC8KQ/SvQ4sQsU58=
-github.com/nextabc-lab/edgex-go v1.1.6/go.mod h1:KeSNyngcRhonSYOHWNacNncogscgCa/XWJauBITWquU=
 github.com/nextabc-lab/edgex-go v1.1.7 h1:xBB+9LGTkNr6fOREVLvb0CsQ6YBBHmilCEoK0U/Z7p8=
 github.com/nextabc-lab/edgex-go v1.1.7/go.mod h1:KeSNyngcRhonSYOHWNacNncogscgCa/XWJauBITWquU=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
@@ -35,7 +33,6 @@ github.com/yoojia/go-bytes v0.0.1 h1:pPDfO96raMWg5jsWF5OXFSMfZ9xw3YrtFBZsqZJNddU
 github.com/yoojia/go-bytes v0.0.1/go.mod h1:eMZ3hmJzpwxOmwB/t7gpJr4Y99FG/Qq33pwpt47TpcQ=
 github.com/yoojia/go-jsonx v1.1.1 h1:Mi9Q82SRagt5Zo+b3CNZlVLzKR4yfMKW58jpCOdjkpg=
 github.com/yoojia/go-jsonx v1.1.1/go.mod h1:Y8rQbOLwD0uOND+rbv6UlRCMWqFcUPgiAAYaNFHwe7E=
-github.com/yoojia/go-value v0.0.1/go.mod h1:g55Bt5kQzfatl2kiKhH6b/oHECM+W2xgfDGyV5VMxwM=
 github.com/yoojia/go-value v0.0.3 h1:idTGH/Lipwb8D0IpWG8bakdlnhkwn80r0GsfaJM41+A=
 github.com/yoojia/go-value v0.0.3/go.mod h1:g55Bt5kQzfatl2kiKhH6b/oHECM+W2xgfDGyV5VMxwM=
 go.uber.org/atomic v1.4.0 h1:cxzIVoETapQEqDhQu3QfnvXAV4AlzcvUCxkVUFw3+EU=

@@ -58,10 +58,11 @@ func trigger(ctx edgex.Context) error {
 			return []byte("EX=ERR:UNKNOWN_SN"), action
 		}
 		// 控制指令数据：
-		bytes, doorId, direct := cmdToJSON(cmd)
+		bytes, card, doorId, direct := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据
 		// 地址： TRIGGER/序列号/门号/方向
 		deviceName := fmt.Sprintf(deviceAddr, cmd.SerialNum, doorId, dongk.DirectName(direct))
+		ctx.Log().Debug("接收到刷卡数据, Device: " + deviceName + ", CardNo: " + card)
 		if err := trigger.SendEventMessage(edgex.NewMessage([]byte(deviceName), bytes)); nil != err {
 			ctx.Log().Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
