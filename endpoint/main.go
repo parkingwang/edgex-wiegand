@@ -95,12 +95,12 @@ func endpoint(ctx edgex.Context) error {
 
 func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
 	deviceOf := func(doorId int) edgex.Device {
+		// Address 可以自动从环境变量中获取
 		return edgex.Device{
 			Name:    fmt.Sprintf("ENDPOINT-%d-%d", sn, doorId),
 			Desc:    fmt.Sprintf("%d号门-控制开关", doorId),
 			Type:    edgex.DeviceTypeEndpoint,
 			Virtual: true,
-			Address: "grpc://ep-dk.edgex.io:5570",
 			Command: fmt.Sprintf("AT+OPEN=%d", doorId),
 		}
 	}
