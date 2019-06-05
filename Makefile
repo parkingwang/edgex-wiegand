@@ -4,7 +4,7 @@ BINARY?=$(shell cat name.txt)
 BUILD_ARCH=$(shell echo ${OSARCH})
 BUILD_ENV?=CGO_ENABLED=0 GOOS=linux GOARCH=${BUILD_ARCH}
 
-IMAGE_TAG?=201906.2-${BUILD_ARCH}
+IMAGE_TAG?=201906.3-${BUILD_ARCH}
 IMAGE_ORG?=registry.cn-shenzhen.aliyuncs.com/edge-x
 IMAGE_NAME=${IMAGE_ORG}/${BINARY}:${IMAGE_TAG}
 
@@ -30,7 +30,7 @@ image: _build_image
 
 # 构建Image
 _build_image: build
-	sudo docker build --build-arg IMAGE=scratch -t $(IMAGE_NAME) .
+	sudo docker build --build-arg IMAGE=alpine:3.9 -t $(IMAGE_NAME) .
 
 # 推送Image到Registry
 push:
