@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/nextabc-lab/edgex-dongkong"
+	"github.com/nextabc-lab/edgex-go"
 	"github.com/tidwall/evio"
 	"github.com/yoojia/go-value"
 	"runtime"
