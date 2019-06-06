@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/nextabc-lab/edgex-dongkong"
-	"github.com/nextabc-lab/edgex-go"
 	"github.com/tidwall/evio"
 	"github.com/yoojia/go-value"
 	"runtime"
@@ -81,13 +80,14 @@ func trigger(ctx edgex.Context) error {
 		return
 	}
 
+	address := value.Of(opts["address"]).MustStringArray()
+	ctx.Log().Debug("开启Evio服务端: ", address)
+	defer ctx.Log().Debug("停止Evio服务端")
+
 	// 启用Trigger服务
 	trigger.Startup()
 	defer trigger.Shutdown()
 
-	address := value.Of(opts["address"]).MustStringArray()
-	ctx.Log().Debug("开启Evio服务端: ", address)
-	defer ctx.Log().Debug("停止Evio服务端")
 	return evio.Serve(server, address...)
 }
 
