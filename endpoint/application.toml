@@ -5,11 +5,11 @@ Broadcast = false
 
 # 东控主板配置参数
 [BoardOptions]
-  serialNumber = 123456
-  doorCount = 4
+  serialNumber = 223177933
+  doorCount = 2
 
 # Socket客户端配置参数
 [SocketClientOptions]
-  remoteAddress = "board.dongk.edgex.io:60000"
+  remoteAddress = "192.168.1.50:60000"
   readTimeout = "1s"
   writeTimeout = "1s"
