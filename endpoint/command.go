@@ -56,8 +56,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 		if nil != err {
 			return nil, nil
 		}
-		data := [32]byte{}
-		w := bytes.WrapWriter(data[:], dongk.ByteOrder)
+		w := bytes.NewWriter(dongk.ByteOrder)
 		w.NextUint32(card)
 		w.NextBytes(getDateOrDefault(args, 1, 20190101))
 		w.NextBytes(getDateOrDefault(args, 2, 20291231)) // 20290101
@@ -65,6 +64,8 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 		w.NextByte(byte(getIntOrDefault(args, 4, 0)))
 		w.NextByte(byte(getIntOrDefault(args, 5, 0)))
 		w.NextByte(byte(getIntOrDefault(args, 6, 0)))
+		data := [32]byte{}
+		copy(data[:], w.Bytes())
 		return dongk.NewCommand(dongk.FunIdCardAdd, broadSN, 0, data).Bytes(),
 			nil
 	}
