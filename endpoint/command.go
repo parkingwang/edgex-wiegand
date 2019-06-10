@@ -78,9 +78,10 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 		if nil != err {
 			return nil, nil
 		}
-		data := [32]byte{}
-		w := bytes.WrapWriter(data[:], dongk.ByteOrder)
+		w := bytes.NewWriter(dongk.ByteOrder)
 		w.NextUint32(card)
+		data := [32]byte{}
+		copy(data[:], w.Bytes())
 		return dongk.NewCommand(dongk.FunIdCardDel, broadSN, 0, data).Bytes(),
 			nil
 	})
