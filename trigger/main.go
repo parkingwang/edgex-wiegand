@@ -46,23 +46,27 @@ func trigger(ctx edgex.Context) error {
 		cmd, err := dongk.ParseCommand(in)
 		if nil != err {
 			ctx.Log().Errorw("接收到非东控数据格式数据", "error", err, "data", in)
-			return []byte("EX=ERR:INVALID_CMD_SIZE"), action
+			return []byte("EX=ERR:INVALID_DK_COMMAND"), action
 		}
 		// 非监控数据，忽略
 		if cmd.FuncId != dongk.FunIdBoardState {
 			ctx.Log().Debug("接收到非监控状态数据")
-			return []byte("EX=ERR:INVALID_STATE"), action
+			return []byte("EX=ERR:INVALID_DK_STATE"), action
 		}
 		if cmd.SerialNum != serialNumber {
 			ctx.Log().Debug("接收到未知序列号数据")
-			return []byte("EX=ERR:UNKNOWN_SN"), action
+			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
 		// 控制指令数据：
-		bytes, card, doorId, direct := cmdToJSON(cmd)
+		bytes, iCard, doorId, direct, rType := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据
 		// 地址： TRIGGER/序列号/门号/方向
 		deviceName := fmt.Sprintf(deviceAddr, cmd.SerialNum, doorId, dongk.DirectName(direct))
-		ctx.Log().Debug("接收到刷卡数据, Device: " + deviceName + ", CardNo: " + card)
+		ctx.Log().Debugf("接收到刷卡数据, Device: %s, Card[uint32]: %d, Card[HEX]: %08x, Type: %s", deviceName, iCard, iCard, dongk.TypeName(rType))
+		if rType != 1 {
+			ctx.Log().Debug("接收到非刷卡类型数据")
+			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
+		}
 		if err := trigger.SendEventMessage(edgex.NewMessage([]byte(deviceName), bytes)); nil != err {
 			ctx.Log().Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/albenik/bcd"
-	dongk "github.com/nextabc-lab/edgex-dongkong"
+	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/yoojia/go-at"
 	"github.com/yoojia/go-bytes"
 	"strconv"
@@ -37,6 +37,9 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 		if nil != err {
 			return nil, errors.New("INVALID_DELAY_SEC:" + args[1])
 		}
+		if 0 > seconds || seconds > 60 {
+			return nil, errors.New(fmt.Sprintf("INVALID_DELAY_SEC: %d", seconds))
+		}
 		return dongk.NewCommand(dongk.FunIdSwitchDelay,
 				broadSN,
 				0,
@@ -47,15 +50,15 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 				}).Bytes(),
 			nil
 	})
-	// AT+ADD=CARD(hex),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
+	// AT+ADD=CARD(uint32),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
 	addHandler := func(args ...string) ([]byte, error) {
-		card, err := hex.DecodeString(args[0])
+		card, err := getCardNumber(args[0])
 		if nil != err {
-			return nil, errors.New("INVALID_CARD:" + args[0])
+			return nil, nil
 		}
 		data := [32]byte{}
 		w := bytes.WrapWriter(data[:], dongk.ByteOrder)
-		w.NextBytes(card)
+		w.NextUint32(card)
 		w.NextBytes(getDateOrDefault(args, 1, 20190101))
 		w.NextBytes(getDateOrDefault(args, 2, 20291231)) // 20290101
 		w.NextByte(byte(getIntOrDefault(args, 3, 0)))
@@ -68,15 +71,15 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	registry.AddX("ADD", 1, addHandler)
 	registry.Add("ADD0", addHandler)
 
-	// AT+DELETE=CARD(hex)
+	// AT+DELETE=CARD(uint32)
 	registry.AddX("DELETE", 1, func(args ...string) ([]byte, error) {
-		card, err := hex.DecodeString(args[0])
+		card, err := getCardNumber(args[0])
 		if nil != err {
-			return nil, errors.New("INVALID_CARD:" + args[0])
+			return nil, nil
 		}
 		data := [32]byte{}
 		w := bytes.WrapWriter(data[:], dongk.ByteOrder)
-		w.NextBytes(card)
+		w.NextUint32(card)
 		return dongk.NewCommand(dongk.FunIdCardDel, broadSN, 0, data).Bytes(),
 			nil
 	})
@@ -110,6 +113,15 @@ func getIntOrDefault(args []string, idx int, def uint32) uint32 {
 		} else {
 			return uint32(v)
 		}
+	}
+}
+
+func getCardNumber(val string) (uint32, error) {
+	intCardNum, err := parseInt(val)
+	if nil != err {
+		return 0, errors.New("INVALID_CARD: " + val)
+	} else {
+		return uint32(intCardNum), nil
 	}
 }
 
