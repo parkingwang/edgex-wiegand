@@ -7,6 +7,7 @@ import (
 	"github.com/nextabc-lab/edgex-go"
 	"github.com/yoojia/go-at"
 	"github.com/yoojia/go-value"
+	"go.uber.org/zap"
 	"runtime"
 	"time"
 )
@@ -57,7 +58,9 @@ func endpoint(ctx edgex.Context) error {
 		if nil != err {
 			return edgex.NewMessageString(deviceName, "EX=ERR:"+err.Error())
 		}
-		ctx.Log().Debug("东控指令码: " + hex.EncodeToString(cmd))
+		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
+			log.Debug("东控指令码: " + hex.EncodeToString(cmd))
+		})
 		// Write
 		if err := tryWrite(conn, cmd, writeTimeout); nil != err {
 			return edgex.NewMessageString(deviceName, "EX=ERR:"+err.Error())
@@ -73,18 +76,22 @@ func endpoint(ctx edgex.Context) error {
 			}
 		}
 		// parse
+		body := "EX=ERR:NO-REPLY"
 		if n > 0 {
 			if outCmd, err := dongk.ParseCommand(buffer); nil != err {
-				return edgex.NewMessageString(deviceName, "EX=ERR:"+err.Error())
+				ctx.Log().Error("解析响应数据出错", err)
+				body = "EX=ERR:PARSE_ERR"
 			} else if outCmd.Success() {
-				return edgex.NewMessageString(deviceName, fmt.Sprintf("EX=OK"))
+				body = "EX=OK"
 			} else {
-				return edgex.NewMessageString(deviceName, "EX=ERR:NOT_OK")
+				body = "EX=ERR:NOT-OK"
 			}
-		} else {
-			return edgex.NewMessageString(deviceName, "EX=ERR:NO_REPLY")
 		}
-
+		ctx.Log().Debug("接收到控制响应: " + body)
+		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
+			log.Debug("响应码: " + hex.EncodeToString(buffer))
+		})
+		return edgex.NewMessageString(deviceName, body)
 	})
 
 	endpoint.Startup()
