@@ -7,7 +7,7 @@ import (
 )
 
 //
-// Author: 陈哈哈 chenyongjia@parkingwang.com, yoojiachen@gmail.com
+// Author: 陈哈哈 bitschen@163.com
 //
 
 func cmdToJSON(cmd *dongk.Command) (frames []byte, iCard uint32, doorId, direct, rType byte) {

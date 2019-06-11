@@ -12,4 +12,5 @@ require (
 	github.com/yoojia/go-bytes v0.0.1
 	github.com/yoojia/go-jsonx v1.1.1
 	github.com/yoojia/go-value v0.0.3
+	go.uber.org/zap v1.9.1
 )

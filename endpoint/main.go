@@ -13,7 +13,7 @@ import (
 )
 
 //
-// Author: 陈哈哈 yoojiachen@gmail.com
+// Author: 陈哈哈 bitschen@163.com
 
 func main() {
 	edgex.Run(endpoint)

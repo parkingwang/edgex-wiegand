@@ -7,7 +7,7 @@ import (
 )
 
 //
-// Author: 陈哈哈 chenyongjia@parkingwang.com, yoojiachen@gmail.com
+// Author: 陈哈哈 bitschen@163.com
 //
 
 func TestDKCommand_Bytes(t *testing.T) {
