@@ -54,7 +54,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	addHandler := func(args ...string) ([]byte, error) {
 		card, err := getCardNumber(args[0])
 		if nil != err {
-			return nil, nil
+			return nil, err
 		}
 		w := bytes.NewWriter(dongk.ByteOrder)
 		w.NextUint32(card)
@@ -76,7 +76,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	registry.AddX("DELETE", 1, func(args ...string) ([]byte, error) {
 		card, err := getCardNumber(args[0])
 		if nil != err {
-			return nil, nil
+			return nil, err
 		}
 		w := bytes.NewWriter(dongk.ByteOrder)
 		w.NextUint32(card)
