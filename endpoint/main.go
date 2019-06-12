@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/bitschen/go-at"
+	"github.com/bitschen/go-value"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/nextabc-lab/edgex-go"
-	"github.com/yoojia/go-at"
-	"github.com/yoojia/go-value"
 	"go.uber.org/zap"
 	"runtime"
 	"time"

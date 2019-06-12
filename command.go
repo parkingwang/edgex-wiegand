@@ -3,7 +3,7 @@ package dongk
 import (
 	"encoding/binary"
 	"errors"
-	"github.com/yoojia/go-bytes"
+	"github.com/bitschen/go-bytes"
 )
 
 //

@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/bitschen/go-bytes"
+	"github.com/bitschen/go-jsonx"
 	"github.com/nextabc-lab/edgex-dongkong"
-	"github.com/yoojia/go-bytes"
-	"github.com/yoojia/go-jsonx"
 )
 
 //
