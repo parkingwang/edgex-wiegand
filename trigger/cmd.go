@@ -10,6 +10,15 @@ import (
 // Author: 陈哈哈 bitschen@163.com
 //
 
+// 19 20 0000
+// cd6c4d0d
+// 01180000
+// 01
+// 00
+// 01
+// 01
+// fb 7c 83 00
+// 2019 06 13 17 070306010100000000000000170703000000000000000000000019061300000000000000000000
 func cmdToJSON(cmd *dongk.Command) (frames []byte, cardNum string, doorId, direct, rType byte) {
 	// 控制指令数据
 	json := jsonx.NewFatJSON()
@@ -23,9 +32,13 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, cardNum string, doorId, direc
 	json.Field("state", reader.NextByte())
 	doorId = reader.NextByte()
 	direct = reader.NextByte()
-	id := wg26.ParseFromUint32(reader.NextUint32())
+	// 卡号字段是维根26码，长度4位，可以只取前3位。
+	// 注意字节顺序
+	b := reader.NextBytes(4)
+	id := wg26.ParseFromWg26([3]byte{
+		b[2], b[1], b[0],
+	})
 	json.Field("card", id.Number)
-	reader.NextBytes(7) // 丢弃timestamp数据
 	json.Field("doorId", doorId)
 	json.Field("direct", dongk.DirectName(direct))
 	return json.Bytes(), id.Number, doorId, direct, rType
