@@ -58,11 +58,11 @@ func trigger(ctx edgex.Context) error {
 			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
 		// 控制指令数据：
-		bytes, iCard, doorId, direct, rType := cmdToJSON(cmd)
+		bytes, card, doorId, direct, rType := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据
 		// 地址： TRIGGER/序列号/门号/方向
 		deviceName := fmt.Sprintf(deviceAddr, cmd.SerialNum, doorId, dongk.DirectName(direct))
-		ctx.Log().Debugf("接收到刷卡数据, Device: %s, Card[uint32]: %d, Card[HEX]: %08x, Type: %s", deviceName, iCard, iCard, dongk.TypeName(rType))
+		ctx.Log().Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", deviceName, card, dongk.TypeName(rType))
 		if rType != 1 {
 			ctx.Log().Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action

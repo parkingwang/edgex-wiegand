@@ -4,23 +4,23 @@
 
 接受AT控制指令的输出终端。
 
-> edgex-endpoint-dongkong
+> endpoint-dongkong
 
 **程序参考配置** `/etc/edgex/application.toml`
 
 ```toml
-# 顶级必要的配置参数
 Name = "DongKongEndpoint"
 RpcAddress = "0.0.0.0:5570"
 Broadcast = false
 
 # 东控主板配置参数
 [BoardOptions]
-  serialNumber = 123456
+  serialNumber = 223177933
+  doorCount = 2
 
 # Socket客户端配置参数
 [SocketClientOptions]
-  remoteAddress = "board.dongk.edgex.io:60000"
+  remoteAddress = "192.168.1.50:60000"
   readTimeout = "1s"
   writeTimeout = "1s"
 ```
@@ -31,6 +31,7 @@ Broadcast = false
 - `RpcAddress` 通过gRPC控制设备时的通讯地址；
 - `Broadcast` Endpoint设备设置为广播模式时，在接收控制指令并处理后，将不读取设备的响应结果，直接返回成功。
 - `BoardOptions.serialNumber` 东控控制器的序列号。
+- `BoardOptions.doorCount` 东控控制器的控制门数量。
 - `SocketClientOptions.remoteAddress` 东控控制器的UDP通讯地址及端口。
 
 
@@ -67,7 +68,7 @@ Broadcast = false
 
 > AT+ADD={CARD},{START_DATE},{END_DATE},{DOOR1},{DOOR2},{DOOR3},{DOOR4}
 
-- `CARD` 卡号，uint32的卡号格式；
+- `CARD` 卡号，卡号原始10位格式；
 - `START_DATE` 有效期开始日期，格式为 YYYYMMdd，如: 20190521
 - `END_DATE` 有效期结束日期，格式为 YYYYMMdd，如: 20190521
 - `DOOR1 - DOOR4` 门号1-4，设置为1表示有权限，设置为0表示无权限；
@@ -80,7 +81,7 @@ Broadcast = false
 
 > AT+DELETE={CARD}
 
-- `CARD` 卡号，uint32的卡号格式；
+- `CARD` 卡号，卡号原始10位格式；
 
 #### AT+CLEAR - 清空授权
 
@@ -130,27 +131,27 @@ Trigger启动后，等待东控控制器连接到程序的UDP服务端，并接�
 
 消息Name格式：
 
-> {serialNumber}/{doorId]/{direct}
+> TRIGGER-{serialNumber}-{doorId]-{direct}
 
 消息数据格式：
 
 ```json
 {
   "sn": 123,
-  "card": "0DD73700",
-  "cardHex": "a1b2c3d4",
+  "card": "0005653307",
   "index": 123,
   "type": 1,
+  "typeName": "CARD",
   "doorId": 1,
-  "direct": 1,
-  "state": 1,
+  "direct": "IN",
+  "state": 1
 }
 ```
 
 - `sn` 设备序列号；
-- `card` 卡号，uint32字符串类型。
+- `card` 卡号，卡号原始10位数字。
 - `doorId` 刷卡门号；
-- `direct` 刷卡门号；
+- `direct` 进出方向；
 - `state` 刷卡状态；
 
 

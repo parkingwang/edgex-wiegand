@@ -7,6 +7,7 @@ import (
 	"github.com/bitschen/go-at"
 	"github.com/bitschen/go-bytes"
 	"github.com/nextabc-lab/edgex-dongkong"
+	"github.com/parkingwang/go-wg26"
 	"strconv"
 )
 
@@ -50,14 +51,17 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 				}).Bytes(),
 			nil
 	})
-	// AT+ADD=CARD(uint32),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
+	// AT+ADD=CARD(ID),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
 	addHandler := func(args ...string) ([]byte, error) {
-		card, err := getCardNumber(args[0])
-		if nil != err {
-			return nil, err
+		card := args[0]
+		if len(card) != 10 {
+			return nil, errors.New("INVALID_CARD_ID")
 		}
 		w := bytes.NewWriter(dongk.ByteOrder)
-		w.NextUint32(card)
+		// 写入卡号
+		w.NextByte(0x00) // 补0
+		w.NextBytes(wg26.ParseFromSN(card).Wg26Bytes[:])
+		//
 		w.NextBytes(getDateOrDefault(args, 1, 20190101))
 		w.NextBytes(getDateOrDefault(args, 2, 20291231)) // 20290101
 		w.NextByte(byte(getIntOrDefault(args, 3, 1)))
@@ -72,16 +76,17 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	registry.AddX("ADD", 1, addHandler)
 	registry.Add("ADD0", addHandler)
 
-	// AT+DELETE=CARD(uint32)
+	// AT+DELETE=CARD(ID)
 	registry.AddX("DELETE", 1, func(args ...string) ([]byte, error) {
-		card, err := getCardNumber(args[0])
-		if nil != err {
-			return nil, err
+		card := args[0]
+		if len(card) != 10 {
+			return nil, errors.New("INVALID_CARD_ID")
 		}
-		w := bytes.NewWriter(dongk.ByteOrder)
-		w.NextUint32(card)
-		data := [32]byte{}
-		copy(data[:], w.Bytes())
+		// 写入卡号
+		b := wg26.ParseFromSN(card).Wg26Bytes
+		data := [32]byte{
+			0x00, b[0], b[1], b[2],
+		}
 		return dongk.NewCommand(dongk.FunIdCardDel, broadSN, 0, data).Bytes(),
 			nil
 	})

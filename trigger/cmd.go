@@ -4,13 +4,14 @@ import (
 	"github.com/bitschen/go-bytes"
 	"github.com/bitschen/go-jsonx"
 	"github.com/nextabc-lab/edgex-dongkong"
+	"github.com/parkingwang/go-wg26"
 )
 
 //
 // Author: 陈哈哈 bitschen@163.com
 //
 
-func cmdToJSON(cmd *dongk.Command) (frames []byte, iCard uint32, doorId, direct, rType byte) {
+func cmdToJSON(cmd *dongk.Command) (frames []byte, cardNum string, doorId, direct, rType byte) {
 	// 控制指令数据
 	json := jsonx.NewFatJSON()
 	json.Field("sn", cmd.SerialNum)
@@ -23,10 +24,11 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, iCard uint32, doorId, direct,
 	json.Field("state", reader.NextByte())
 	doorId = reader.NextByte()
 	direct = reader.NextByte()
-	iCard = reader.NextUint32()
-	json.Field("card", iCard)
+	b := reader.NextBytes(4)
+	id := wg26.ParseFromWg26([3]byte{b[1], b[2], b[3]})
+	json.Field("card", id.Number)
 	reader.NextBytes(7) // 丢弃timestamp数据
 	json.Field("doorId", doorId)
 	json.Field("direct", dongk.DirectName(direct))
-	return json.Bytes(), iCard, doorId, direct, rType
+	return json.Bytes(), id.Number, doorId, direct, rType
 }
