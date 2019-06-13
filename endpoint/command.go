@@ -58,10 +58,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 			return nil, errors.New("INVALID_CARD_ID")
 		}
 		w := bytes.NewWriter(dongk.ByteOrder)
-		// 写入卡号
-		w.NextByte(0x00) // 补0
-		w.NextBytes(wg26.ParseFromSN(card).Wg26Bytes[:])
-		//
+		w.NextUint32(uint32(wg26.TrimZero(card)))
 		w.NextBytes(getDateOrDefault(args, 1, 20190101))
 		w.NextBytes(getDateOrDefault(args, 2, 20291231)) // 20290101
 		w.NextByte(byte(getIntOrDefault(args, 3, 1)))
@@ -83,10 +80,10 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 			return nil, errors.New("INVALID_CARD_ID")
 		}
 		// 写入卡号
-		b := wg26.ParseFromSN(card).Wg26Bytes
-		data := [32]byte{
-			0x00, b[0], b[1], b[2],
-		}
+		w := bytes.NewWriter(dongk.ByteOrder)
+		w.NextUint32(uint32(wg26.TrimZero(card)))
+		data := [32]byte{}
+		copy(data[:], w.Bytes())
 		return dongk.NewCommand(dongk.FunIdCardDel, broadSN, 0, data).Bytes(),
 			nil
 	})
@@ -120,15 +117,6 @@ func getIntOrDefault(args []string, idx int, def uint32) uint32 {
 		} else {
 			return uint32(v)
 		}
-	}
-}
-
-func getCardNumber(val string) (uint32, error) {
-	intCardNum, err := parseInt(val)
-	if nil != err {
-		return 0, errors.New("INVALID_CARD: " + val)
-	} else {
-		return uint32(intCardNum), nil
 	}
 }
 

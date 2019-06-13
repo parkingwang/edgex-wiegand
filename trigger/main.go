@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/bitschen/go-value"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/nextabc-lab/edgex-go"
 	"github.com/tidwall/evio"
+	"go.uber.org/zap"
 	"runtime"
 )
 
@@ -57,6 +59,9 @@ func trigger(ctx edgex.Context) error {
 			ctx.Log().Debug("接收到未知序列号数据")
 			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
+		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
+			log.Debug("东控制指令码: ", hex.EncodeToString(in))
+		})
 		// 控制指令数据：
 		bytes, card, doorId, direct, rType := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据

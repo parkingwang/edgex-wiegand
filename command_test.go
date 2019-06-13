@@ -26,7 +26,7 @@ func TestDKCommand_Bytes(t *testing.T) {
 	}
 
 	reBytes := reDK.Bytes()
-	fmt.Printf("%X", reBytes)
+	fmt.Printf("%X\n", reBytes)
 
 	if hex.EncodeToString(rawBytes) != hex.EncodeToString(reBytes) {
 		t.Fatal("Not match")

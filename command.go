@@ -74,6 +74,10 @@ func (dk *Command) Success() bool {
 	return 0x01 == dk.Data[0]
 }
 
+func (dk *Command) DataReader() *bytes.Reader {
+	return bytes.WrapReader(dk.Data[:], ByteOrder)
+}
+
 // 创建DK指令
 func NewCommand0(magic, funcId byte, nop uint16, serial uint32, seqId uint32, data [32]byte, extra [20]byte) *Command {
 	return &Command{

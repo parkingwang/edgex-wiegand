@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/bitschen/go-bytes"
 	"github.com/bitschen/go-jsonx"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/parkingwang/go-wg26"
@@ -16,7 +15,7 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, cardNum string, doorId, direc
 	json := jsonx.NewFatJSON()
 	json.Field("sn", cmd.SerialNum)
 	// Reader一个按顺序读取字节数组的包装类
-	reader := bytes.WrapReader(cmd.Data[:], dongk.ByteOrder)
+	reader := cmd.DataReader()
 	json.Field("index", reader.NextUint32())
 	rType = reader.NextByte()
 	json.Field("type", rType)
@@ -24,8 +23,7 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, cardNum string, doorId, direc
 	json.Field("state", reader.NextByte())
 	doorId = reader.NextByte()
 	direct = reader.NextByte()
-	b := reader.NextBytes(4)
-	id := wg26.ParseFromWg26([3]byte{b[1], b[2], b[3]})
+	id := wg26.ParseFromUint32(reader.NextUint32())
 	json.Field("card", id.Number)
 	reader.NextBytes(7) // 丢弃timestamp数据
 	json.Field("doorId", doorId)
