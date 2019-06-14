@@ -1,5 +1,4 @@
-# 顶级必要的配置参数
-Name = "DongKongTrigger"
+NodeName = "DongKongTrigger"
 Topic = "dongkong/events"
 
 # 东控主板配置参数

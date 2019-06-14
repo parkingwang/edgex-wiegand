@@ -1,5 +1,4 @@
-# 顶级必要的配置参数
-Name = "DongKongEndpoint"
+NodeName = "DongKongEndpoint"
 RpcAddress = "0.0.0.0:5570"
 Broadcast = false
 

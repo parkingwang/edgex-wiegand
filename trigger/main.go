@@ -8,7 +8,6 @@ import (
 	"github.com/nextabc-lab/edgex-go"
 	"github.com/tidwall/evio"
 	"go.uber.org/zap"
-	"runtime"
 )
 
 //
@@ -18,7 +17,7 @@ import (
 const (
 	// 设备地址格式：　READER - 序列号 - 门号 - 方向
 	// 东控门禁设备，一个门对应两个输入端
-	deviceAddr = "READER-%d-%d-%s"
+	virtualDeviceName = "READER-%d-%d-%s"
 )
 
 func main() {
@@ -27,7 +26,7 @@ func main() {
 
 func trigger(ctx edgex.Context) error {
 	config := ctx.LoadConfig()
-	triggerName := value.Of(config["Name"]).String()
+	nodeName := value.Of(config["NodeName"]).String()
 	eventTopic := value.Of(config["Topic"]).String()
 
 	boardOpts := value.Of(config["BoardOptions"]).MustMap()
@@ -35,7 +34,7 @@ func trigger(ctx edgex.Context) error {
 	doorCount := value.Of(boardOpts["doorCount"]).Int64OrDefault(4)
 
 	trigger := ctx.NewTrigger(edgex.TriggerOptions{
-		Name:        triggerName,
+		NodeName:    nodeName,
 		Topic:       eventTopic,
 		InspectFunc: inspectFunc(serialNumber, int(doorCount), eventTopic),
 	})
@@ -66,14 +65,13 @@ func trigger(ctx edgex.Context) error {
 		// 控制指令数据：
 		bytes, card, doorId, direct, rType := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据
-		// 地址： TRIGGER/序列号/门号/方向
-		deviceName := fmt.Sprintf(deviceAddr, cmd.SerialNum, doorId, dongk.DirectName(direct))
+		deviceName := fmt.Sprintf(virtualDeviceName, cmd.SerialNum, doorId, dongk.DirectName(direct))
 		ctx.Log().Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", deviceName, card, dongk.TypeName(rType))
 		if rType != 1 {
 			ctx.Log().Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
 		}
-		if err := trigger.SendEventMessage(edgex.NewMessage([]byte(deviceName), bytes)); nil != err {
+		if err := trigger.SendEventMessage(deviceName, bytes); nil != err {
 			ctx.Log().Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
 		} else {
@@ -106,11 +104,11 @@ func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspe
 	deviceOf := func(doorId, direct int) edgex.VirtualDevice {
 		directName := dongk.DirectName(byte(direct))
 		return edgex.VirtualDevice{
-			Name:       fmt.Sprintf(deviceAddr, sn, doorId, directName),
-			Desc:       fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
-			Type:       edgex.DeviceTypeTrigger,
-			Virtual:    true,
-			EventTopic: eventTopic,
+			VirtualName: fmt.Sprintf(virtualDeviceName, sn, doorId, directName),
+			Desc:        fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
+			Type:        edgex.DeviceTypeTrigger,
+			Virtual:     true,
+			EventTopic:  eventTopic,
 		}
 	}
 	return func() edgex.Inspect {
@@ -120,8 +118,6 @@ func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspe
 			devices[d*2+1] = deviceOf(d+1, dongk.DirectOut)
 		}
 		return edgex.Inspect{
-			HostOS:         runtime.GOOS,
-			HostArch:       runtime.GOARCH,
 			Vendor:         dongk.VendorName,
 			DriverName:     dongk.DriverName,
 			VirtualDevices: devices,
