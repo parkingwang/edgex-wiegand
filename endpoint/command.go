@@ -54,7 +54,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	// AT+ADD=CARD(ID),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
 	addHandler := func(args ...string) ([]byte, error) {
 		cardSN := args[0]
-		if wg26.IsCardSN(cardSN) {
+		if !wg26.IsCardSN(cardSN) {
 			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
 		// 东控卡号使用的是 WG26SN 对应的字面数值
@@ -77,7 +77,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	// AT+DELETE=CARD(ID)
 	registry.AddX("DELETE", 1, func(args ...string) ([]byte, error) {
 		cardSN := args[0]
-		if wg26.IsCardSN(cardSN) {
+		if !wg26.IsCardSN(cardSN) {
 			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
 		// 东控卡号使用的是 WG26SN 对应的字面数值
