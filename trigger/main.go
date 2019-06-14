@@ -16,8 +16,9 @@ import (
 //
 
 const (
-	// 设备地址格式：　TRIGGER-SN-DOOR_ID-DIRECT
-	deviceAddr = "TRIGGER-%d-%d-%s"
+	// 设备地址格式：　READER - 序列号 - 门号 - 方向
+	// 东控门禁设备，一个门对应两个输入端
+	deviceAddr = "READER-%d-%d-%s"
 )
 
 func main() {
@@ -102,9 +103,9 @@ func trigger(ctx edgex.Context) error {
 }
 
 func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspect {
-	deviceOf := func(doorId, direct int) edgex.Device {
+	deviceOf := func(doorId, direct int) edgex.VirtualDevice {
 		directName := dongk.DirectName(byte(direct))
-		return edgex.Device{
+		return edgex.VirtualDevice{
 			Name:       fmt.Sprintf(deviceAddr, sn, doorId, directName),
 			Desc:       fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
 			Type:       edgex.DeviceTypeTrigger,
@@ -113,17 +114,17 @@ func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspe
 		}
 	}
 	return func() edgex.Inspect {
-		devices := make([]edgex.Device, doorCount*2)
+		devices := make([]edgex.VirtualDevice, doorCount*2)
 		for d := 0; d < doorCount; d++ {
 			devices[d*2] = deviceOf(d+1, dongk.DirectIn)
 			devices[d*2+1] = deviceOf(d+1, dongk.DirectOut)
 		}
 		return edgex.Inspect{
-			HostOS:     runtime.GOOS,
-			HostArch:   runtime.GOARCH,
-			Vendor:     dongk.VendorName,
-			DriverName: dongk.DriverName,
-			Devices:    devices,
+			HostOS:         runtime.GOOS,
+			HostArch:       runtime.GOARCH,
+			Vendor:         dongk.VendorName,
+			DriverName:     dongk.DriverName,
+			VirtualDevices: devices,
 		}
 	}
 }
