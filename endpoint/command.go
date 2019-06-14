@@ -53,12 +53,13 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 	})
 	// AT+ADD=CARD(ID),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
 	addHandler := func(args ...string) ([]byte, error) {
-		card := args[0]
-		if len(card) != 10 {
-			return nil, errors.New("INVALID_CARD_ID")
+		cardSN := args[0]
+		if wg26.IsCardSN(cardSN) {
+			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
+		// 东控卡号使用的是 WG26SN 对应的字面数值
 		w := bytes.NewWriter(dongk.ByteOrder)
-		w.NextUint32(uint32(wg26.TrimZero(card)))
+		w.NextUint32(wg26.ParseFromCardNumber(cardSN).ValueOfWg26SN())
 		w.NextBytes(getDateOrDefault(args, 1, 20190101))
 		w.NextBytes(getDateOrDefault(args, 2, 20291231)) // 20290101
 		w.NextByte(byte(getIntOrDefault(args, 3, 1)))
@@ -75,13 +76,13 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 
 	// AT+DELETE=CARD(ID)
 	registry.AddX("DELETE", 1, func(args ...string) ([]byte, error) {
-		card := args[0]
-		if len(card) != 10 {
-			return nil, errors.New("INVALID_CARD_ID")
+		cardSN := args[0]
+		if wg26.IsCardSN(cardSN) {
+			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
-		// 写入卡号
+		// 东控卡号使用的是 WG26SN 对应的字面数值
 		w := bytes.NewWriter(dongk.ByteOrder)
-		w.NextUint32(uint32(wg26.TrimZero(card)))
+		w.NextUint32(wg26.ParseFromCardNumber(cardSN).ValueOfWg26SN())
 		data := [32]byte{}
 		copy(data[:], w.Bytes())
 		return dongk.NewCommand(dongk.FunIdCardDel, broadSN, 0, data).Bytes(),
