@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bitschen/go-jsonx"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/parkingwang/go-wg26"
@@ -32,14 +33,11 @@ func cmdToJSON(cmd *dongk.Command) (frames []byte, cardNum string, doorId, direc
 	json.Field("state", reader.NextByte())
 	doorId = reader.NextByte()
 	direct = reader.NextByte()
-	// 卡号字段是维根26码，长度4位，可以只取前3位。
-	// 注意字节顺序
-	b := reader.NextBytes(4)
-	id := wg26.ParseFromWg26([3]byte{
-		b[2], b[1], b[0],
-	})
-	json.Field("card", id.Number)
+	// 卡号字段是维根26码字面数值
+	card := reader.NextUint32()
+	id := wg26.ParseFromWg26Number(fmt.Sprintf("%d", card))
+	json.Field("card", id.CardSN)
 	json.Field("doorId", doorId)
 	json.Field("direct", dongk.DirectName(direct))
-	return json.Bytes(), id.Number, doorId, direct, rType
+	return json.Bytes(), id.CardSN, doorId, direct, rType
 }

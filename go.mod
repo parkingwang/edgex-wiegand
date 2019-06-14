@@ -10,7 +10,7 @@ require (
 	github.com/bitschen/go-value v0.0.4
 	github.com/kavu/go_reuseport v1.4.0 // indirect
 	github.com/nextabc-lab/edgex-go v1.2.2
-	github.com/parkingwang/go-wg26 v0.0.2
+	github.com/parkingwang/go-wg26 v0.1.2
 	github.com/pkg/errors v0.8.1
 	github.com/tidwall/evio v1.0.2
 	go.uber.org/zap v1.9.1
