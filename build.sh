@@ -10,7 +10,6 @@ makeModule() {
         echo ">> Build module: ${dir}"
         cd ${dir}
         OSARCH=arm ./make.sh $*
-        OSARCH=amd64 ./make.sh $*
         cd -
     done
 }
