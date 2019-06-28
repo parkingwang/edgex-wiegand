@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/bitschen/go-jsonx"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/parkingwang/go-wg26"
+	"github.com/yoojia/go-jsonx"
 )
 
 //

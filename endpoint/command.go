@@ -4,10 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/albenik/bcd"
-	"github.com/bitschen/go-at"
-	"github.com/bitschen/go-bytes"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/parkingwang/go-wg26"
+	"github.com/yoojia/go-at"
+	"github.com/yoojia/go-bytes"
 	"strconv"
 )
 

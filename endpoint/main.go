@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/bitschen/go-at"
-	"github.com/bitschen/go-value"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/nextabc-lab/edgex-go"
+	"github.com/yoojia/go-at"
+	"github.com/yoojia/go-value"
 	"go.uber.org/zap"
 	"time"
 )
@@ -44,13 +44,15 @@ func endpoint(ctx edgex.Context) error {
 
 	buffer := make([]byte, 64)
 	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
-		NodeName:    nodeName,
-		RpcAddr:     rpcAddress,
-		InspectFunc: inspectFunc(serialNumber, int(doorCount)),
+		NodeName:        nodeName,
+		RpcAddr:         rpcAddress,
+		SerialExecuting: true, // 东控品牌设置不支持并发处理
+		InspectFunc:     inspectFunc(serialNumber, int(doorCount)),
 	})
 
 	// 处理控制指令
 	endpoint.Serve(func(msg edgex.Message) (out edgex.Message) {
+
 		atCmd := string(msg.Body())
 		ctx.Log().Debug("接收到控制指令: " + atCmd)
 		cmd, err := atRegistry.Apply(atCmd)
@@ -100,25 +102,25 @@ func endpoint(ctx edgex.Context) error {
 }
 
 func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
-	deviceOf := func(doorId int) edgex.VirtualDevice {
+	deviceOf := func(doorId int) edgex.VirtualNode {
 		// Address 可以自动从环境变量中获取
-		return edgex.VirtualDevice{
-			VirtualName: fmt.Sprintf("SWITCH-%d-%d", sn, doorId),
-			Desc:        fmt.Sprintf("%d号门-控制开关", doorId),
-			Type:        edgex.DeviceTypeEndpoint,
-			Virtual:     true,
-			Command:     fmt.Sprintf("AT+OPEN=%d", doorId),
+		return edgex.VirtualNode{
+			VirtualNodeName: fmt.Sprintf("SWITCH-%d-%d", sn, doorId),
+			Desc:            fmt.Sprintf("%d号门-控制开关", doorId),
+			Type:            edgex.NodeTypeEndpoint,
+			Virtual:         true,
+			Command:         fmt.Sprintf("AT+OPEN=%d", doorId),
 		}
 	}
 	return func() edgex.Inspect {
-		devices := make([]edgex.VirtualDevice, doorCount)
+		nodes := make([]edgex.VirtualNode, doorCount)
 		for d := 0; d < doorCount; d++ {
-			devices[d] = deviceOf(d + 1)
+			nodes[d] = deviceOf(d + 1)
 		}
 		return edgex.Inspect{
-			Vendor:         dongk.VendorName,
-			DriverName:     dongk.DriverName,
-			VirtualDevices: devices,
+			Vendor:       dongk.VendorName,
+			DriverName:   dongk.DriverName,
+			VirtualNodes: nodes,
 		}
 	}
 }
