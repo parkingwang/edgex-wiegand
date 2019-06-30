@@ -18,10 +18,10 @@ before_script:
 
 script:
   - go mod download
-  - build.sh image
+  - ./build.sh image
 
 after_success:
-  - build.sh push
+  - ./build.sh push
 
 branches:
   only:
