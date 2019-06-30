@@ -1,7 +1,4 @@
-ARG IMAGE=scratch
-FROM $IMAGE
-
-LABEL MAINTAINER="bitschen@163.com"
+FROM scratch
 
 # 执行文件名称，须与 name.txt 中一致
 COPY trigger-dongkong /bin/
