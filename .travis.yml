@@ -10,19 +10,18 @@ env:
   - GOMAXPROCS=4 GO111MODULE=on
 
 install:
-  - sudo apt-get upx -y
+  - sudo apt-get install upx -y
 
 before_script:
-  - git config --global url.https://github.com/.insteadOf ssh://git@github.com/
-    # Login Aliyun Registry
+  # Login Aliyun Registry
   - echo "$DOCKER_PASSWORD" | docker login registry.cn-shenzhen.aliyuncs.com -u "$DOCKER_USERNAME" --password-stdin
 
 script:
   - go mod download
-  - ./build.sh image
+  - build.sh image
 
 after_success:
-  - ./build.sh push
+  - build.sh push
 
 branches:
   only:
