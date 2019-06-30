@@ -1,0 +1,30 @@
+dist: trusty
+sudo: required
+services:
+  - docker
+language: go
+go:
+  - "1.12.4"
+
+env:
+  - GOMAXPROCS=4 GO111MODULE=on
+
+install:
+  - sudo apt-get upx -y
+
+before_script:
+  - git config --global url.https://github.com/.insteadOf ssh://git@github.com/
+    # Login Aliyun Registry
+  - echo "$DOCKER_PASSWORD" | docker login registry.cn-shenzhen.aliyuncs.com -u "$DOCKER_USERNAME" --password-stdin
+
+script:
+  - go mod download
+  - ./build.sh image
+
+after_success:
+  - ./build.sh push
+
+branches:
+  only:
+    - master
+    - v0.0.2
