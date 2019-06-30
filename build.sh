@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-modules=( \
-"endpoint" \
-"trigger" \
-)
+export DOCKER_CLI_EXPERIMENTAL=enabled
+
+modules=( "endpoint" "trigger" )
 
 makeModule() {
     for dir in ${modules[@]} ; do
@@ -12,8 +11,9 @@ makeModule() {
         # Build linux dist
         GOOS=linux GOARCH=arm make -f ../Makefile $*
         GOOS=linux GOARCH=amd64 make -f ../Makefile $*
+        GOOS=linux make -f ../Makefile manifest
         cd -
     done
 }
 
-makeModule $*
+makeModule image push

@@ -1,12 +1,19 @@
-dist: trusty
 sudo: required
-services:
-  - docker
 language: go
 go:
   - "1.12.4"
+dist: xenial
+
+services:
+  - docker
+
+addons:
+  apt:
+    packages:
+      - docker-ce
 
 env:
+  - DOCKER_CLI_EXPERIMENTAL=enabled
   - GOMAXPROCS=4 GO111MODULE=on
 
 install:
@@ -18,10 +25,7 @@ before_script:
 
 script:
   - go mod download
-  - ./build.sh image
-
-after_success:
-  - ./build.sh push
+  - ./build.sh
 
 branches:
   only:
