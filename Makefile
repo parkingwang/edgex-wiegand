@@ -1,10 +1,9 @@
 BINARY?=$(shell cat name.txt)
 
 # Build opts
-BUILD_ARCH=$(shell echo ${OSARCH})
-BUILD_ENV?=CGO_ENABLED=0 GOOS=linux GOARCH=${BUILD_ARCH}
+BUILD_ENV?=CGO_ENABLED=0 GOOS=${GOOS} GOARCH=${GOARCH}
 
-IMAGE_TAG?=0.0.2-${BUILD_ARCH}
+IMAGE_TAG?=0.0.2-${GOOS}_${GOARCH}
 IMAGE_ORG?=registry.cn-shenzhen.aliyuncs.com/edge-x
 IMAGE_NAME=${IMAGE_ORG}/${BINARY}:${IMAGE_TAG}
 

@@ -7,9 +7,11 @@ modules=( \
 
 makeModule() {
     for dir in ${modules[@]} ; do
-        echo ">> Build module: ${dir}"
+        echo "###### Building module: ${dir}"
         cd ${dir}
-        OSARCH=arm ./make.sh $*
+        # Build linux dist
+        GOOS=linux GOARCH=arm make -f ../Makefile $*
+        GOOS=linux GOARCH=amd64 make -f ../Makefile $*
         cd -
     done
 }
