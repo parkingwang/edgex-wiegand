@@ -30,4 +30,3 @@ script:
 branches:
   only:
     - master
-    - v0.0.2
