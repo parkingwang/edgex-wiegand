@@ -36,7 +36,8 @@ func endpoint(ctx edgex.Context) error {
 	atRegistry := at.NewAtRegister()
 	atCommands(atRegistry, serialNumber)
 
-	ctx.Log().Debugf("连接目标地址: [udp://%s]", remoteAddress)
+	log := ctx.Log()
+	log.Debugf("连接目标地址: [udp://%s]", remoteAddress)
 	conn, err := makeUdpConn(remoteAddress)
 	if nil != err {
 		return err
@@ -52,43 +53,43 @@ func endpoint(ctx edgex.Context) error {
 
 	// 处理控制指令
 	endpoint.Serve(func(msg edgex.Message) (out edgex.Message) {
-
 		atCmd := string(msg.Body())
-		ctx.Log().Debug("接收到控制指令: " + atCmd)
+
+		log.Debug("接收到控制指令: " + atCmd)
 		cmd, err := atRegistry.Apply(atCmd)
 		if nil != err {
-			return edgex.NewMessageString(nodeName, "EX=ERR:"+err.Error())
+			return edgex.NewMessageString(nodeName, "EX=ERR:BAD_CMD:"+err.Error())
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
 			log.Debug("东控指令码: " + hex.EncodeToString(cmd))
 		})
 		// Write
 		if err := tryWrite(conn, cmd, writeTimeout); nil != err {
-			return edgex.NewMessageString(nodeName, "EX=ERR:"+err.Error())
+			return edgex.NewMessageString(nodeName, "EX=ERR:WRITE:"+err.Error())
 		}
 		// Read
 		var n = int(0)
 		for i := 0; i < 2; i++ {
 			if n, err = tryRead(conn, buffer, readTimeout); nil != err {
-				ctx.Log().Errorf("读取设备响应数据出错[%d]: %s", i, err.Error())
+				log.Errorf("读取设备响应数据出错[%d]: %s", i, err.Error())
 				<-time.After(time.Millisecond * 500)
 			} else {
 				break
 			}
 		}
 		// parse
-		body := "EX=ERR:NO-REPLY"
+		body := "EX=ERR:NO_REPLY"
 		if n > 0 {
 			if outCmd, err := dongk.ParseCommand(buffer); nil != err {
-				ctx.Log().Error("解析响应数据出错", err)
+				log.Error("解析响应数据出错", err)
 				body = "EX=ERR:PARSE_ERR"
 			} else if outCmd.Success() {
 				body = "EX=OK"
 			} else {
-				body = "EX=ERR:NOT-OK"
+				body = "EX=ERR:NOT_OK"
 			}
 		}
-		ctx.Log().Debug("接收到控制响应: " + body)
+		log.Debug("接收到控制响应: " + body)
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
 			log.Debug("响应码: " + hex.EncodeToString(buffer))
 		})

@@ -44,19 +44,21 @@ func trigger(ctx edgex.Context) error {
 	opts := value.Of(config["SocketServerOptions"]).MustMap()
 	server.NumLoops = 1
 
+	log := ctx.Log()
+
 	server.Data = func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
 		cmd, err := dongk.ParseCommand(in)
 		if nil != err {
-			ctx.Log().Errorw("接收到非东控数据格式数据", "error", err, "data", in)
+			log.Errorw("接收到非东控数据格式数据", "error", err, "data", in)
 			return []byte("EX=ERR:INVALID_DK_COMMAND"), action
 		}
 		// 非监控数据，忽略
 		if cmd.FuncId != dongk.FunIdBoardState {
-			ctx.Log().Debug("接收到非监控状态数据")
+			log.Debug("接收到非监控状态数据")
 			return []byte("EX=ERR:INVALID_DK_STATE"), action
 		}
 		if cmd.SerialNum != serialNumber {
-			ctx.Log().Debug("接收到未知序列号数据")
+			log.Debug("接收到未知序列号数据")
 			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
@@ -66,13 +68,13 @@ func trigger(ctx edgex.Context) error {
 		bytes, card, doorId, direct, rType := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据
 		deviceName := fmt.Sprintf(virtualDeviceName, cmd.SerialNum, doorId, dongk.DirectName(direct))
-		ctx.Log().Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", deviceName, card, dongk.TypeName(rType))
+		log.Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", deviceName, card, dongk.TypeName(rType))
 		if rType != 1 {
-			ctx.Log().Debug("接收到非刷卡类型数据")
+			log.Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
 		}
 		if err := trigger.SendEventMessage(deviceName, bytes); nil != err {
-			ctx.Log().Error("触发事件出错: ", err)
+			log.Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
 		} else {
 			return []byte("EX=OK:DK_EVENT"), action
@@ -80,18 +82,18 @@ func trigger(ctx edgex.Context) error {
 	}
 
 	server.Opened = func(c evio.Conn) (out []byte, opts evio.Options, action evio.Action) {
-		ctx.Log().Debug("接受客户端: ", c.RemoteAddr())
+		log.Debug("接受客户端: ", c.RemoteAddr())
 		return
 	}
 
 	server.Closed = func(c evio.Conn, err error) (action evio.Action) {
-		ctx.Log().Debug("断开客户端: ", c.RemoteAddr())
+		log.Debug("断开客户端: ", c.RemoteAddr())
 		return
 	}
 
 	address := value.Of(opts["address"]).MustStringArray()
-	ctx.Log().Debug("开启Evio服务端: ", address)
-	defer ctx.Log().Debug("停止Evio服务端")
+	log.Debug("开启Evio服务端: ", address)
+	defer log.Debug("停止Evio服务端")
 
 	// 启用Trigger服务
 	trigger.Startup()
