@@ -58,14 +58,14 @@ func endpoint(ctx edgex.Context) error {
 		log.Debug("接收到控制指令: " + atCmd)
 		cmd, err := atRegistry.Apply(atCmd)
 		if nil != err {
-			return edgex.NewMessageString(nodeName, "EX=ERR:BAD_CMD:"+err.Error())
+			return endpoint.NextMessage(nodeName, []byte("EX=ERR:BAD_CMD:"+err.Error()))
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
 			log.Debug("东控指令码: " + hex.EncodeToString(cmd))
 		})
 		// Write
 		if err := tryWrite(conn, cmd, writeTimeout); nil != err {
-			return edgex.NewMessageString(nodeName, "EX=ERR:WRITE:"+err.Error())
+			return endpoint.NextMessage(nodeName, []byte("EX=ERR:WRITE:"+err.Error()))
 		}
 		// Read
 		var n = int(0)
@@ -78,22 +78,22 @@ func endpoint(ctx edgex.Context) error {
 			}
 		}
 		// parse
-		body := "EX=ERR:NO_REPLY"
+		reply := "EX=ERR:NO_REPLY"
 		if n > 0 {
 			if outCmd, err := dongk.ParseCommand(buffer); nil != err {
 				log.Error("解析响应数据出错", err)
-				body = "EX=ERR:PARSE_ERR"
+				reply = "EX=ERR:PARSE_ERR"
 			} else if outCmd.Success() {
-				body = "EX=OK"
+				reply = "EX=OK"
 			} else {
-				body = "EX=ERR:NOT_OK"
+				reply = "EX=ERR:NOT_OK"
 			}
 		}
-		log.Debug("接收到控制响应: " + body)
+		log.Debug("接收到控制响应: " + reply)
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
 			log.Debug("响应码: " + hex.EncodeToString(buffer))
 		})
-		return edgex.NewMessageString(nodeName, body)
+		return endpoint.NextMessage(nodeName, []byte(reply))
 	})
 
 	endpoint.Startup()
