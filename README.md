@@ -1,15 +1,20 @@
-# DongKong - 东控品牌设备驱动
+# EdgeX-DongKong 东控品牌设备驱动
+
+包括两个东控品牌驱动程序：
+
+1. `endpoint`：接受AT指令控制，执行后返回响应结果的输出终端驱动；
+1. `trigger`：接受东控硬件UDP通讯数据的触发器，可以将东控的刷卡事件返回到系统内部；
 
 ## Endpoint - 控制终端
 
-接受AT控制指令的输出终端。
+接受AT控制指令的输出操作终端驱动。
 
 > endpoint-dongkong
 
 **程序参考配置** `/etc/edgex/application.toml`
 
 ```toml
-Name = "DongKongEndpoint"
+NodeName = "DongKongEndpoint"
 RpcAddress = "0.0.0.0:5570"
 Broadcast = false
 
@@ -27,8 +32,8 @@ Broadcast = false
 
 配置说明：
 
-- `Name` 设备名称，在项目内部每个设备名称必须保持唯一性；
-- `RpcAddress` 通过gRPC控制设备时的通讯地址；
+- `NodeName` 节点名称，须保证项目内部唯一性；
+- `RpcAddress` gRPC绑定地址；通过gRPC控制设备时的通讯地址；
 - `Broadcast` Endpoint设备设置为广播模式时，在接收控制指令并处理后，将不读取设备的响应结果，直接返回成功。
 - `BoardOptions.serialNumber` 东控控制器的序列号。
 - `BoardOptions.doorCount` 东控控制器的控制门数量。
@@ -107,7 +112,7 @@ Broadcast = false
 
 ```toml
 # 顶级必要的配置参数
-Name = "DongKongTrigger"
+NodeName = "DongKongTrigger"
 Topic = "dongkong/events"
 
 # SocketServer配置参数
@@ -120,7 +125,7 @@ Topic = "dongkong/events"
 
 配置说明：
 
-- `Name` 设备名称，在项目内部每个设备名称必须保持唯一性；
+- `NodeName` 设备名称，在项目内部每个设备名称必须保持唯一性；
 - `Topic` 每个Trigger都必须指定一个Topic；不得以`/`开头；
 - `SocketServerOptions.address` 服务端监听地址列表；可监听多个地址；
 
@@ -154,5 +159,9 @@ Trigger启动后，等待东控控制器连接到程序的UDP服务端，并接�
 - `direct` 进出方向；
 - `state` 刷卡状态；
 
+## 参考资料
+
+1. [短报文格式_操作实例](DK-proto-operator.pdf)
+1. [短报文格式](DK-proto.pdf)
 
 
