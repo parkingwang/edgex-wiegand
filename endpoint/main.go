@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/nextabc-lab/edgex-go"
 	"github.com/nextabc-lab/edgex-wiegand"
 	"github.com/yoojia/go-at"

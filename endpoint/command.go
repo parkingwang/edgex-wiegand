@@ -12,7 +12,7 @@ import (
 )
 
 //
-// Author: 陈哈哈 bitschen@163.com
+// Author: 陈哈哈 yoojiachen@gmail.com
 //
 
 func atCommands(registry *at.AtRegister, broadSN uint32) {

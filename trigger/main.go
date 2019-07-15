@@ -11,7 +11,7 @@ import (
 )
 
 //
-// Author: 陈哈哈 bitschen@163.com
+// Author: 陈哈哈 yoojiachen@gmail.com
 //
 
 const (
@@ -62,7 +62,7 @@ func trigger(ctx edgex.Context) error {
 			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("微耕制指令码: ", hex.EncodeToString(in))
+			log.Debug("微耕控制指令码: ", hex.EncodeToString(in))
 		})
 		// 控制指令数据：
 		bytes, card, doorId, direct, rType := cmdToJSON(cmd)

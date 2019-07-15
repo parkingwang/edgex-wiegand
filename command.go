@@ -7,7 +7,7 @@ import (
 )
 
 //
-// Author: 陈哈哈 bitschen@163.com
+// Author: 陈哈哈 yoojiachen@gmail.com
 //
 
 // 传递指令时使用的字节顺序
@@ -28,7 +28,7 @@ const (
 	FunIdCardClear = 0x54
 )
 
-// 东控Magic位
+// 微耕Magic位
 const (
 	Magic = 0x19
 )
@@ -45,7 +45,7 @@ const (
 	DirectOut = 2
 )
 
-// 东控门禁主板指令
+// 微耕门禁主板指令
 type Command struct {
 	Magic     byte     // 1
 	FuncId    byte     // 1
@@ -56,29 +56,29 @@ type Command struct {
 	Extra     [20]byte // 20
 }
 
-func (dk *Command) Bytes() []byte {
-	// 东控数据包使用小字节序
+func (wgc *Command) Bytes() []byte {
+	// 微耕数据包使用小字节序
 	br := bytes.NewWriter(ByteOrder)
-	br.NextByte(dk.Magic)
-	br.NextByte(dk.FuncId)
-	br.NextUint16(dk.reversed)
-	br.NextUint32(dk.SerialNum)
-	br.NextBytes(dk.Data[:])
-	br.NextUint32(dk.SeqId)
-	br.NextBytes(dk.Extra[:])
+	br.NextByte(wgc.Magic)
+	br.NextByte(wgc.FuncId)
+	br.NextUint16(wgc.reversed)
+	br.NextUint32(wgc.SerialNum)
+	br.NextBytes(wgc.Data[:])
+	br.NextUint32(wgc.SeqId)
+	br.NextBytes(wgc.Extra[:])
 	return br.Bytes()
 }
 
 // Success 返回接收报文的成功标记位状态
-func (dk *Command) Success() bool {
-	return 0x01 == dk.Data[0]
+func (wgc *Command) Success() bool {
+	return 0x01 == wgc.Data[0]
 }
 
-func (dk *Command) DataReader() *bytes.Reader {
-	return bytes.WrapReader(dk.Data[:], ByteOrder)
+func (wgc *Command) DataReader() *bytes.Reader {
+	return bytes.WrapReader(wgc.Data[:], ByteOrder)
 }
 
-// 创建DK指令
+// 创建指令
 func NewCommand0(magic, funcId byte, nop uint16, serial uint32, seqId uint32, data [32]byte, extra [20]byte) *Command {
 	return &Command{
 		Magic:     magic,
@@ -91,7 +91,7 @@ func NewCommand0(magic, funcId byte, nop uint16, serial uint32, seqId uint32, da
 	}
 }
 
-// 创建DK指令
+// 创建指令
 func NewCommand(funcId byte, serialId uint32, seqId uint32, data [32]byte) *Command {
 	return NewCommand0(
 		Magic,
@@ -103,7 +103,7 @@ func NewCommand(funcId byte, serialId uint32, seqId uint32, data [32]byte) *Comm
 		[20]byte{})
 }
 
-// 解析DK数据指令。
+// 解析数据指令。
 func ParseCommand(frame []byte) (*Command, error) {
 	if len(frame) < 9 {
 		return nil, errors.New("invalid bytes len")
