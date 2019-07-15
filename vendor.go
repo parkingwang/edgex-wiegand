@@ -1,10 +1,10 @@
-package dongk
+package wiegand
 
 //
 // Author: 陈哈哈 bitschen@163.com
 //
 
 const (
-	VendorName = "DONGKONG"
+	VendorName = "Wiegand"
 	DriverName = "UDP"
 )

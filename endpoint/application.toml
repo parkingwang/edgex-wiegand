@@ -1,8 +1,8 @@
-NodeName = "DongKongEndpoint"
+NodeName = "WidgandEndpoint"
 RpcAddress = "0.0.0.0:5570"
 Broadcast = false
 
-# 东控主板配置参数
+# 主板配置参数
 [BoardOptions]
   serialNumber = 223177933
   doorCount = 2

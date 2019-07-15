@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/nextabc-lab/edgex-go"
+	"github.com/nextabc-lab/edgex-wiegand"
 	"github.com/tidwall/evio"
 	"github.com/yoojia/go-value"
 	"go.uber.org/zap"
@@ -16,7 +16,7 @@ import (
 
 const (
 	// 设备地址格式：　READER - 序列号 - 门号 - 方向
-	// 东控门禁设备，一个门对应两个输入端
+	// 门禁设备，一个门对应两个输入端
 	virtualDeviceName = "READER-%d-%d-%s"
 )
 
@@ -47,13 +47,13 @@ func trigger(ctx edgex.Context) error {
 	log := ctx.Log()
 
 	server.Data = func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
-		cmd, err := dongk.ParseCommand(in)
+		cmd, err := wiegand.ParseCommand(in)
 		if nil != err {
-			log.Errorw("接收到非东控数据格式数据", "error", err, "data", in)
+			log.Errorw("接收到非微耕数据格式数据", "error", err, "data", in)
 			return []byte("EX=ERR:INVALID_DK_COMMAND"), action
 		}
 		// 非监控数据，忽略
-		if cmd.FuncId != dongk.FunIdBoardState {
+		if cmd.FuncId != wiegand.FunIdBoardState {
 			log.Debug("接收到非监控状态数据")
 			return []byte("EX=ERR:INVALID_DK_STATE"), action
 		}
@@ -62,13 +62,13 @@ func trigger(ctx edgex.Context) error {
 			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("东控制指令码: ", hex.EncodeToString(in))
+			log.Debug("微耕制指令码: ", hex.EncodeToString(in))
 		})
 		// 控制指令数据：
 		bytes, card, doorId, direct, rType := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据
-		deviceName := fmt.Sprintf(virtualDeviceName, cmd.SerialNum, doorId, dongk.DirectName(direct))
-		log.Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", deviceName, card, dongk.TypeName(rType))
+		deviceName := fmt.Sprintf(virtualDeviceName, cmd.SerialNum, doorId, wiegand.DirectName(direct))
+		log.Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", deviceName, card, wiegand.TypeName(rType))
 		if rType != 1 {
 			log.Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
@@ -104,7 +104,7 @@ func trigger(ctx edgex.Context) error {
 
 func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspect {
 	deviceOf := func(doorId, direct int) edgex.VirtualNode {
-		directName := dongk.DirectName(byte(direct))
+		directName := wiegand.DirectName(byte(direct))
 		return edgex.VirtualNode{
 			VirtualNodeName: fmt.Sprintf(virtualDeviceName, sn, doorId, directName),
 			Desc:            fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
@@ -116,12 +116,12 @@ func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspe
 	return func() edgex.Inspect {
 		nodes := make([]edgex.VirtualNode, doorCount*2)
 		for d := 0; d < doorCount; d++ {
-			nodes[d*2] = deviceOf(d+1, dongk.DirectIn)
-			nodes[d*2+1] = deviceOf(d+1, dongk.DirectOut)
+			nodes[d*2] = deviceOf(d+1, wiegand.DirectIn)
+			nodes[d*2+1] = deviceOf(d+1, wiegand.DirectOut)
 		}
 		return edgex.Inspect{
-			Vendor:       dongk.VendorName,
-			DriverName:   dongk.DriverName,
+			Vendor:       wiegand.VendorName,
+			DriverName:   wiegand.DriverName,
 			VirtualNodes: nodes,
 		}
 	}

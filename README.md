@@ -1,24 +1,30 @@
-# EdgeX-DongKong 东控品牌设备驱动
+# EdgeX-Wiegand 微耕品牌设备驱动
 
-包括两个东控品牌驱动程序：
+包括两个微耕品牌驱动程序：
 
 1. `endpoint`：接受AT指令控制，执行后返回响应结果的输出终端驱动；
-1. `trigger`：接受东控硬件UDP通讯数据的触发器，可以将东控的刷卡事件返回到系统内部；
+1. `trigger`：接受微耕硬件UDP通讯数据的触发器，可以将微耕的刷卡事件返回到系统内部；
+
+## 其它品牌
+
+可以支持微耕OEM/ODM的其它品牌门禁设备。已知如下：
+
+1. 东控智能
 
 ## Endpoint - 控制终端
 
 接受AT控制指令的输出操作终端驱动。
 
-> endpoint-dongkong
+> endpoint-wiegand
 
 **程序参考配置** `/etc/edgex/application.toml`
 
 ```toml
-NodeName = "DongKongEndpoint"
+NodeName = "WiegandEndpoint"
 RpcAddress = "0.0.0.0:5570"
 Broadcast = false
 
-# 东控主板配置参数
+# 微耕主板配置参数
 [BoardOptions]
   serialNumber = 223177933
   doorCount = 2
@@ -35,9 +41,9 @@ Broadcast = false
 - `NodeName` 节点名称，须保证项目内部唯一性；
 - `RpcAddress` gRPC绑定地址；通过gRPC控制设备时的通讯地址；
 - `Broadcast` Endpoint设备设置为广播模式时，在接收控制指令并处理后，将不读取设备的响应结果，直接返回成功。
-- `BoardOptions.serialNumber` 东控控制器的序列号。
-- `BoardOptions.doorCount` 东控控制器的控制门数量。
-- `SocketClientOptions.remoteAddress` 东控控制器的UDP通讯地址及端口。
+- `BoardOptions.serialNumber` 微耕控制器的序列号。
+- `BoardOptions.doorCount` 微耕控制器的控制门数量。
+- `SocketClientOptions.remoteAddress` 微耕控制器的UDP通讯地址及端口。
 
 
 ----
@@ -112,8 +118,8 @@ Broadcast = false
 
 ```toml
 # 顶级必要的配置参数
-NodeName = "DongKongTrigger"
-Topic = "dongkong/events"
+NodeName = "WiegandTrigger"
+Topic = "wiegand/events"
 
 # SocketServer配置参数
 [SocketServerOptions]
@@ -131,7 +137,7 @@ Topic = "dongkong/events"
 
 #### 程序说明
 
-Trigger启动后，等待东控控制器连接到程序的UDP服务端，并接收其刷卡广播数据。
+Trigger启动后，等待微耕控制器连接到程序的UDP服务端，并接收其刷卡广播数据。
 接收到刷卡数据后，将数据生成以下JSON格式数据包，以指定的Topic发送到MQTT服务器。
 
 消息Name格式：
@@ -161,7 +167,7 @@ Trigger启动后，等待东控控制器连接到程序的UDP服务端，并接�
 
 ## 参考资料
 
-1. [短报文格式_操作实例](DK-proto-operator.pdf)
-1. [短报文格式](DK-proto.pdf)
+1. [短报文格式_操作实例](WG-proto-operator.pdf)
+1. [短报文格式](WG-proto.pdf)
 
 

@@ -1,4 +1,4 @@
-package dongk
+package wiegand
 
 import (
 	"encoding/hex"
@@ -10,14 +10,14 @@ import (
 // Author: 陈哈哈 bitschen@163.com
 //
 
-func TestDKCommand_Bytes(t *testing.T) {
+func TestCommand_Bytes(t *testing.T) {
 
-	dk := NewCommand(0x40,
+	wg := NewCommand(0x40,
 		223177933,
 		23,
 		[32]byte{0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF})
 
-	rawBytes := dk.Bytes()
+	rawBytes := wg.Bytes()
 	fmt.Printf("%X\n", rawBytes)
 
 	reDK, err := ParseCommand(rawBytes)

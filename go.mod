@@ -1,4 +1,4 @@
-module github.com/nextabc-lab/edgex-dongkong
+module github.com/nextabc-lab/edgex-wiegand
 
 go 1.12
 

@@ -1,4 +1,4 @@
-package dongk
+package wiegand
 
 import (
 	"encoding/binary"

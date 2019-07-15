@@ -1,1 +1,1 @@
-endpoint-dongkong
+endpoint-wiegand

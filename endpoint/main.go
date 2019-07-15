@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/nextabc-lab/edgex-dongkong"
 	"github.com/nextabc-lab/edgex-go"
+	"github.com/nextabc-lab/edgex-wiegand"
 	"github.com/yoojia/go-at"
 	"github.com/yoojia/go-value"
 	"go.uber.org/zap"
@@ -47,7 +48,7 @@ func endpoint(ctx edgex.Context) error {
 	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
 		NodeName:        nodeName,
 		RpcAddr:         rpcAddress,
-		SerialExecuting: true, // 东控品牌设置不支持并发处理
+		SerialExecuting: true, // 微耕品牌设置不支持并发处理
 		InspectFunc:     inspectFunc(serialNumber, int(doorCount)),
 	})
 
@@ -61,7 +62,7 @@ func endpoint(ctx edgex.Context) error {
 			return endpoint.NextMessage(nodeName, []byte("EX=ERR:BAD_CMD:"+err.Error()))
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("东控指令码: " + hex.EncodeToString(cmd))
+			log.Debug("微耕指令码: " + hex.EncodeToString(cmd))
 		})
 		// Write
 		if err := tryWrite(conn, cmd, writeTimeout); nil != err {
@@ -80,7 +81,7 @@ func endpoint(ctx edgex.Context) error {
 		// parse
 		reply := "EX=ERR:NO_REPLY"
 		if n > 0 {
-			if outCmd, err := dongk.ParseCommand(buffer); nil != err {
+			if outCmd, err := wiegand.ParseCommand(buffer); nil != err {
 				log.Error("解析响应数据出错", err)
 				reply = "EX=ERR:PARSE_ERR"
 			} else if outCmd.Success() {
@@ -119,8 +120,8 @@ func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
 			nodes[d] = deviceOf(d + 1)
 		}
 		return edgex.Inspect{
-			Vendor:       dongk.VendorName,
-			DriverName:   dongk.DriverName,
+			Vendor:       wiegand.VendorName,
+			DriverName:   wiegand.DriverName,
 			VirtualNodes: nodes,
 		}
 	}
