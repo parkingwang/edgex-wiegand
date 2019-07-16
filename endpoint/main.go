@@ -48,7 +48,7 @@ func endpoint(ctx edgex.Context) error {
 		NodeName:        nodeName,
 		RpcAddr:         rpcAddress,
 		SerialExecuting: true, // 微耕品牌设置不支持并发处理
-		InspectNodeFunc: mainNodeInfo(serialNumber, int(doorCount)),
+		InspectNodeFunc: nodeFunc(serialNumber, int(doorCount)),
 	})
 
 	// 处理控制指令
@@ -102,11 +102,11 @@ func endpoint(ctx edgex.Context) error {
 	return ctx.TermAwait()
 }
 
-func mainNodeInfo(sn uint32, doorCount int) func() edgex.MainNode {
+func nodeFunc(nodeName string, serialNum uint32, doorCount int) func() edgex.MainNode {
 	deviceOf := func(doorId int) edgex.VirtualNode {
 		// Address 可以自动从环境变量中获取
 		return edgex.VirtualNode{
-			Major:      fmt.Sprintf("%d", sn),
+			Major:      fmt.Sprintf("%d", serialNum),
 			Minor:      fmt.Sprintf("%d", doorId),
 			Desc:       fmt.Sprintf("%d号门-控制开关", doorId),
 			Virtual:    true,
@@ -120,6 +120,7 @@ func mainNodeInfo(sn uint32, doorCount int) func() edgex.MainNode {
 		}
 		return edgex.MainNode{
 			NodeType:     edgex.NodeTypeEndpoint,
+			NodeName:     nodeName,
 			Vendor:       wiegand.VendorName,
 			ConnDriver:   wiegand.ConnectionDriver,
 			VirtualNodes: nodes,
