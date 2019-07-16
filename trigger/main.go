@@ -34,9 +34,9 @@ func trigger(ctx edgex.Context) error {
 	doorCount := value.Of(boardOpts["doorCount"]).Int64OrDefault(4)
 
 	trigger := ctx.NewTrigger(edgex.TriggerOptions{
-		NodeName:    nodeName,
-		Topic:       eventTopic,
-		InspectFunc: inspectFunc(serialNumber, int(doorCount), eventTopic),
+		NodeName:        nodeName,
+		Topic:           eventTopic,
+		InspectNodeFunc: nodeInfo(serialNumber, int(doorCount)),
 	})
 
 	var server evio.Events
@@ -102,26 +102,26 @@ func trigger(ctx edgex.Context) error {
 	return evio.Serve(server, address...)
 }
 
-func inspectFunc(sn uint32, doorCount int, eventTopic string) func() edgex.Inspect {
+func nodeInfo(sn uint32, doorCount int) func() edgex.MainNode {
 	deviceOf := func(doorId, direct int) edgex.VirtualNode {
 		directName := wiegand.DirectName(byte(direct))
 		return edgex.VirtualNode{
-			VirtualNodeName: fmt.Sprintf(virtualDeviceName, sn, doorId, directName),
-			Desc:            fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
-			Type:            edgex.NodeTypeTrigger,
-			Virtual:         true,
-			EventTopic:      eventTopic,
+			Major:   fmt.Sprintf("%d:%d", sn, doorId),
+			Minor:   directName,
+			Desc:    fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
+			Virtual: true,
 		}
 	}
-	return func() edgex.Inspect {
+	return func() edgex.MainNode {
 		nodes := make([]edgex.VirtualNode, doorCount*2)
 		for d := 0; d < doorCount; d++ {
 			nodes[d*2] = deviceOf(d+1, wiegand.DirectIn)
 			nodes[d*2+1] = deviceOf(d+1, wiegand.DirectOut)
 		}
-		return edgex.Inspect{
+		return edgex.MainNode{
 			Vendor:       wiegand.VendorName,
-			DriverName:   wiegand.DriverName,
+			ConnDriver:   wiegand.ConnectionDriver,
+			NodeType:     edgex.NodeTypeTrigger,
 			VirtualNodes: nodes,
 		}
 	}

@@ -5,6 +5,6 @@ package wiegand
 //
 
 const (
-	VendorName = "Wiegand"
-	DriverName = "UDP"
+	VendorName       = "Wiegand"
+	ConnectionDriver = "UDP"
 )

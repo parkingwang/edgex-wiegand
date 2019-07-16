@@ -48,7 +48,7 @@ func endpoint(ctx edgex.Context) error {
 		NodeName:        nodeName,
 		RpcAddr:         rpcAddress,
 		SerialExecuting: true, // 微耕品牌设置不支持并发处理
-		InspectFunc:     inspectFunc(serialNumber, int(doorCount)),
+		InspectNodeFunc: mainNodeInfo(serialNumber, int(doorCount)),
 	})
 
 	// 处理控制指令
@@ -102,25 +102,26 @@ func endpoint(ctx edgex.Context) error {
 	return ctx.TermAwait()
 }
 
-func inspectFunc(sn uint32, doorCount int) func() edgex.Inspect {
+func mainNodeInfo(sn uint32, doorCount int) func() edgex.MainNode {
 	deviceOf := func(doorId int) edgex.VirtualNode {
 		// Address 可以自动从环境变量中获取
 		return edgex.VirtualNode{
-			VirtualNodeName: fmt.Sprintf("SWITCH-%d-%d", sn, doorId),
-			Desc:            fmt.Sprintf("%d号门-控制开关", doorId),
-			Type:            edgex.NodeTypeEndpoint,
-			Virtual:         true,
-			Command:         fmt.Sprintf("AT+OPEN=%d", doorId),
+			Major:      fmt.Sprintf("%d", sn),
+			Minor:      fmt.Sprintf("%d", doorId),
+			Desc:       fmt.Sprintf("%d号门-控制开关", doorId),
+			Virtual:    true,
+			RpcCommand: fmt.Sprintf("AT+OPEN=%d", doorId),
 		}
 	}
-	return func() edgex.Inspect {
+	return func() edgex.MainNode {
 		nodes := make([]edgex.VirtualNode, doorCount)
 		for d := 0; d < doorCount; d++ {
 			nodes[d] = deviceOf(d + 1)
 		}
-		return edgex.Inspect{
+		return edgex.MainNode{
+			NodeType:     edgex.NodeTypeEndpoint,
 			Vendor:       wiegand.VendorName,
-			DriverName:   wiegand.DriverName,
+			ConnDriver:   wiegand.ConnectionDriver,
 			VirtualNodes: nodes,
 		}
 	}
