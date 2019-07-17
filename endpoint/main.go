@@ -48,7 +48,7 @@ func endpoint(ctx edgex.Context) error {
 		NodeName:        nodeName,
 		RpcAddr:         rpcAddress,
 		SerialExecuting: true, // 微耕品牌设置不支持并发处理
-		InspectNodeFunc: nodeFunc(serialNumber, int(doorCount)),
+		InspectNodeFunc: nodeFunc(nodeName, serialNumber, int(doorCount)),
 	})
 
 	// 处理控制指令
