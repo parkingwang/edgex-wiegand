@@ -17,7 +17,7 @@ import (
 const (
 	// 设备地址格式：　READER - 序列号 - 门号 - 方向
 	// 门禁设备，一个门对应两个输入端
-	virtualDeviceName = "READER-%d-%d-%s"
+	nodeIdFormat = "READER:%d:%d:%s"
 )
 
 func main() {
@@ -67,13 +67,13 @@ func trigger(ctx edgex.Context) error {
 		// 控制指令数据：
 		bytes, card, doorId, direct, rType := cmdToJSON(cmd)
 		// 最后执行控制指令：刷卡数据
-		deviceName := fmt.Sprintf(virtualDeviceName, cmd.SerialNum, doorId, wiegand.DirectName(direct))
-		log.Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", deviceName, card, wiegand.TypeName(rType))
+		virtualNodeId := fmt.Sprintf(nodeIdFormat, cmd.SerialNum, doorId, wiegand.DirectName(direct))
+		log.Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", virtualNodeId, card, wiegand.TypeName(rType))
 		if rType != 1 {
 			log.Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
 		}
-		if err := trigger.SendEventMessage(deviceName, bytes); nil != err {
+		if err := trigger.SendEventMessage(virtualNodeId, bytes); nil != err {
 			log.Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
 		} else {
@@ -106,6 +106,7 @@ func nodeFunc(nodeName string, serialNum uint32, doorCount int) func() edgex.Mai
 	deviceOf := func(doorId, direct int) edgex.VirtualNode {
 		directName := wiegand.DirectName(byte(direct))
 		return edgex.VirtualNode{
+			NodeId:  fmt.Sprintf(nodeIdFormat, serialNum, doorId, directName),
 			Major:   fmt.Sprintf("%d:%d", serialNum, doorId),
 			Minor:   directName,
 			Desc:    fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),

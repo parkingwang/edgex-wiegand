@@ -106,6 +106,7 @@ func nodeFunc(nodeName string, serialNum uint32, doorCount int) func() edgex.Mai
 	deviceOf := func(doorId int) edgex.VirtualNode {
 		// Address 可以自动从环境变量中获取
 		return edgex.VirtualNode{
+			NodeId:     fmt.Sprintf("SWITCH:%d:%d", serialNum, doorId),
 			Major:      fmt.Sprintf("%d", serialNum),
 			Minor:      fmt.Sprintf("%d", doorId),
 			Desc:       fmt.Sprintf("%d号门-控制开关", doorId),
