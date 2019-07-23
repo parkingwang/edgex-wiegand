@@ -17,7 +17,7 @@ env:
   - GOMAXPROCS=4 GO111MODULE=on
 
 install:
-  - sudo apt update -y && apt install upx-ucl -y
+  - sudo apt update -y && sudo apt install upx-ucl -y
 
 before_script:
   # Login Aliyun Registry
