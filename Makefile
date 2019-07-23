@@ -39,9 +39,9 @@ push:
 manifest:
 	@echo ">>> Docker PUSH MANIFEST: $<"
 	sudo docker manifest create --amend $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM) $(IMAGE_NAME_ARM64) $(IMAGE_NAME_AMD64)
-	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM) --arch arm
-	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM64) --arch arm64
-	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_AMD64) --arch amd64
+	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM) --os linux --arch arm
+	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM64) --os linux --arch arm64  --variant v8
+	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_AMD64) --os linux --arch amd64
 	sudo docker manifest push $(IMAGE_NAME_VERSION)
 
 clean:
