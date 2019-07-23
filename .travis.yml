@@ -2,7 +2,7 @@ sudo: required
 language: go
 go:
   - "1.12.4"
-dist: xenial
+dist: bionic
 
 services:
   - docker
@@ -17,7 +17,7 @@ env:
   - GOMAXPROCS=4 GO111MODULE=on
 
 install:
-  - sudo apt-get install upx -y
+  - sudo apt update -y && apt install upx-ucl -y
 
 before_script:
   # Login Aliyun Registry
