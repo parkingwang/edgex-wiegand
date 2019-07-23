@@ -10,6 +10,7 @@ IMAGE_NAME_PLATFORM=${IMAGE_ORG}/${BINARY}:${IMAGE_VER}-${GOOS}_${GOARCH}
 IMAGE_NAME_VERSION=${IMAGE_ORG}/${BINARY}:${IMAGE_VER}
 
 IMAGE_NAME_ARM=${IMAGE_ORG}/${BINARY}:${IMAGE_VER}-${GOOS}_arm
+IMAGE_NAME_ARM64=${IMAGE_ORG}/${BINARY}:${IMAGE_VER}-${GOOS}_arm64
 IMAGE_NAME_AMD64=${IMAGE_ORG}/${BINARY}:${IMAGE_VER}-${GOOS}_amd64
 
 
@@ -37,9 +38,9 @@ push:
 # 创建Minifest
 manifest:
 	@echo ">>> Docker PUSH MANIFEST: $<"
-	sudo docker manifest create --amend $(IMAGE_NAME_VERSION) \
-		$(IMAGE_NAME_ARM) $(IMAGE_NAME_AMD64)
+	sudo docker manifest create --amend $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM) $(IMAGE_NAME_ARM64) $(IMAGE_NAME_AMD64)
 	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM) --arch arm
+	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_ARM64) --arch arm64
 	sudo docker manifest annotate $(IMAGE_NAME_VERSION) $(IMAGE_NAME_AMD64) --arch amd64
 	sudo docker manifest push $(IMAGE_NAME_VERSION)
 
