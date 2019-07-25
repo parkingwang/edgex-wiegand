@@ -36,7 +36,10 @@ func endpoint(ctx edgex.Context) error {
 	atRegistry := at.NewAtRegister()
 	atCommands(atRegistry, serialNumber)
 
+	// Init
 	log := ctx.Log()
+	ctx.Initial(nodeName)
+
 	log.Debugf("连接目标地址: [udp://%s]", remoteAddress)
 	conn, err := makeUdpConn(remoteAddress)
 	if nil != err {
@@ -48,7 +51,7 @@ func endpoint(ctx edgex.Context) error {
 		NodeName:        nodeName,
 		RpcAddr:         rpcAddress,
 		SerialExecuting: true, // 微耕品牌设置不支持并发处理
-		InspectNodeFunc: nodeFunc(nodeName, serialNumber, int(doorCount)),
+		AutoInspectFunc: nodeFunc(serialNumber, int(doorCount)),
 	})
 
 	// 处理控制指令
@@ -102,10 +105,10 @@ func endpoint(ctx edgex.Context) error {
 	return ctx.TermAwait()
 }
 
-func nodeFunc(nodeName string, serialNum uint32, doorCount int) func() edgex.MainNode {
-	deviceOf := func(doorId int) edgex.VirtualNode {
+func nodeFunc(serialNum uint32, doorCount int) func() edgex.MainNode {
+	deviceOf := func(doorId int) *edgex.VirtualNode {
 		// Address 可以自动从环境变量中获取
-		return edgex.VirtualNode{
+		return &edgex.VirtualNode{
 			NodeId:     fmt.Sprintf("SWITCH:%d:%d", serialNum, doorId),
 			Major:      fmt.Sprintf("%d", serialNum),
 			Minor:      fmt.Sprintf("%d", doorId),
@@ -115,13 +118,12 @@ func nodeFunc(nodeName string, serialNum uint32, doorCount int) func() edgex.Mai
 		}
 	}
 	return func() edgex.MainNode {
-		nodes := make([]edgex.VirtualNode, doorCount)
+		nodes := make([]*edgex.VirtualNode, doorCount)
 		for d := 0; d < doorCount; d++ {
 			nodes[d] = deviceOf(d + 1)
 		}
 		return edgex.MainNode{
 			NodeType:     edgex.NodeTypeEndpoint,
-			NodeName:     nodeName,
 			Vendor:       wiegand.VendorName,
 			ConnDriver:   wiegand.ConnectionDriver,
 			VirtualNodes: nodes,

@@ -33,10 +33,14 @@ func trigger(ctx edgex.Context) error {
 	serialNumber := uint32(value.Of(boardOpts["serialNumber"]).MustInt64())
 	doorCount := value.Of(boardOpts["doorCount"]).Int64OrDefault(4)
 
+	// Init
+	log := ctx.Log()
+	ctx.Initial(nodeName)
+
 	trigger := ctx.NewTrigger(edgex.TriggerOptions{
 		NodeName:        nodeName,
 		Topic:           eventTopic,
-		InspectNodeFunc: nodeFunc(nodeName, serialNumber, int(doorCount)),
+		AutoInspectFunc: nodeFunc(serialNumber, int(doorCount)),
 	})
 
 	var server evio.Events
@@ -44,21 +48,19 @@ func trigger(ctx edgex.Context) error {
 	opts := value.Of(config["SocketServerOptions"]).MustMap()
 	server.NumLoops = 1
 
-	log := ctx.Log()
-
 	server.Data = func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
 		cmd, err := wiegand.ParseCommand(in)
 		if nil != err {
-			log.Errorw("接收到非微耕数据格式数据", "error", err, "data", in)
+			log.Debugf("接收到非微耕数据格式数据: ERR= %s, DATA= %v", err.Error(), in)
 			return []byte("EX=ERR:INVALID_DK_COMMAND"), action
 		}
 		// 非监控数据，忽略
 		if cmd.FuncId != wiegand.FunIdBoardState {
-			log.Debug("接收到非监控状态数据")
+			log.Debugf("接收到非监控状态数据: FunId= %x", cmd.FuncId)
 			return []byte("EX=ERR:INVALID_DK_STATE"), action
 		}
 		if cmd.SerialNum != serialNumber {
-			log.Debug("接收到未知序列号数据")
+			log.Debugf("接收到未知序列号数据: SN= %d", cmd.SerialNum)
 			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
@@ -73,7 +75,7 @@ func trigger(ctx edgex.Context) error {
 			log.Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
 		}
-		if err := trigger.SendEventMessage(virtualNodeId, bytes); nil != err {
+		if err := trigger.PublishEvent(virtualNodeId, bytes); nil != err {
 			log.Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
 		} else {
@@ -102,10 +104,10 @@ func trigger(ctx edgex.Context) error {
 	return evio.Serve(server, address...)
 }
 
-func nodeFunc(nodeName string, serialNum uint32, doorCount int) func() edgex.MainNode {
-	deviceOf := func(doorId, direct int) edgex.VirtualNode {
+func nodeFunc(serialNum uint32, doorCount int) func() edgex.MainNode {
+	deviceOf := func(doorId, direct int) *edgex.VirtualNode {
 		directName := wiegand.DirectName(byte(direct))
-		return edgex.VirtualNode{
+		return &edgex.VirtualNode{
 			NodeId:  fmt.Sprintf(nodeIdFormat, serialNum, doorId, directName),
 			Major:   fmt.Sprintf("%d:%d", serialNum, doorId),
 			Minor:   directName,
@@ -114,14 +116,13 @@ func nodeFunc(nodeName string, serialNum uint32, doorCount int) func() edgex.Mai
 		}
 	}
 	return func() edgex.MainNode {
-		nodes := make([]edgex.VirtualNode, doorCount*2)
+		nodes := make([]*edgex.VirtualNode, doorCount*2)
 		for d := 0; d < doorCount; d++ {
 			nodes[d*2] = deviceOf(d+1, wiegand.DirectIn)
 			nodes[d*2+1] = deviceOf(d+1, wiegand.DirectOut)
 		}
 		return edgex.MainNode{
 			NodeType:     edgex.NodeTypeTrigger,
-			NodeName:     nodeName,
 			Vendor:       wiegand.VendorName,
 			ConnDriver:   wiegand.ConnectionDriver,
 			VirtualNodes: nodes,

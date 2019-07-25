@@ -9,6 +9,6 @@ Broadcast = false
 
 # Socket客户端配置参数
 [SocketClientOptions]
-  remoteAddress = "192.168.1.50:60000"
+  remoteAddress = "192.168.1.12:60000"
   readTimeout = "1s"
   writeTimeout = "1s"
