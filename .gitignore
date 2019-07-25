@@ -2,4 +2,5 @@
 build
 endpoint-*
 trigger-*
+edgenode-*
 package.zip
