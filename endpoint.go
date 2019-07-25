@@ -1,61 +1,28 @@
-package main
+package wiegand
 
 import (
 	"encoding/hex"
 	"fmt"
 	"github.com/nextabc-lab/edgex-go"
-	"github.com/nextabc-lab/edgex-wiegand"
 	"github.com/yoojia/go-at"
-	"github.com/yoojia/go-value"
 	"go.uber.org/zap"
+	"net"
 	"time"
 )
 
 //
-// Author: 陈哈哈 bitschen@163.com
+// Author: 陈哈哈 yoojiachen@gmail.com
+//
 
-func main() {
-	edgex.Run(endpoint)
-}
+const (
+	ioTimeout = time.Second * 3
+)
 
-func endpoint(ctx edgex.Context) error {
-	config := ctx.LoadConfig()
-	nodeName := value.Of(config["NodeName"]).String()
-	rpcAddress := value.Of(config["RpcAddress"]).String()
-
-	sockOpts := value.Of(config["SocketClientOptions"]).MustMap()
-	remoteAddress := value.Of(sockOpts["remoteAddress"]).String()
-	readTimeout := value.Of(sockOpts["readTimeout"]).DurationOfDefault(time.Second)
-	writeTimeout := value.Of(sockOpts["writeTimeout"]).DurationOfDefault(time.Second)
-
-	boardOpts := value.Of(config["BoardOptions"]).MustMap()
-	serialNumber := uint32(value.Of(boardOpts["serialNumber"]).MustInt64())
-	doorCount := value.Of(boardOpts["doorCount"]).Int64OrDefault(4)
-
-	// AT指令解析
-	atRegistry := at.NewAtRegister()
-	atCommands(atRegistry, serialNumber)
-
-	// Init
+func FuncEndpointHandler(ctx edgex.Context, endpoint edgex.Endpoint, atRegistry *at.AtRegister, conn *net.UDPConn) func(msg edgex.Message) (out edgex.Message) {
 	log := ctx.Log()
-	ctx.Initial(nodeName)
-
-	log.Debugf("连接目标地址: [udp://%s]", remoteAddress)
-	conn, err := makeUdpConn(remoteAddress)
-	if nil != err {
-		return err
-	}
-
+	nodeName := endpoint.NodeName()
 	buffer := make([]byte, 64)
-	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
-		NodeName:        nodeName,
-		RpcAddr:         rpcAddress,
-		SerialExecuting: true, // 微耕品牌设置不支持并发处理
-		AutoInspectFunc: nodeFunc(serialNumber, int(doorCount)),
-	})
-
-	// 处理控制指令
-	endpoint.Serve(func(msg edgex.Message) (out edgex.Message) {
+	return func(msg edgex.Message) (out edgex.Message) {
 		atCmd := string(msg.Body())
 
 		log.Debug("接收到控制指令: " + atCmd)
@@ -67,13 +34,13 @@ func endpoint(ctx edgex.Context) error {
 			log.Debug("微耕指令码: " + hex.EncodeToString(cmd))
 		})
 		// Write
-		if err := tryWrite(conn, cmd, writeTimeout); nil != err {
+		if err := tryWrite(conn, cmd, ioTimeout); nil != err {
 			return endpoint.NextMessage(nodeName, []byte("EX=ERR:WRITE:"+err.Error()))
 		}
 		// Read
 		var n = int(0)
 		for i := 0; i < 2; i++ {
-			if n, err = tryRead(conn, buffer, readTimeout); nil != err {
+			if n, err = tryRead(conn, buffer, ioTimeout); nil != err {
 				log.Errorf("读取设备响应数据出错[%d]: %s", i, err.Error())
 				<-time.After(time.Millisecond * 500)
 			} else {
@@ -83,7 +50,7 @@ func endpoint(ctx edgex.Context) error {
 		// parse
 		reply := "EX=ERR:NO_REPLY"
 		if n > 0 {
-			if outCmd, err := wiegand.ParseCommand(buffer); nil != err {
+			if outCmd, err := ParseCommand(buffer); nil != err {
 				log.Error("解析响应数据出错", err)
 				reply = "EX=ERR:PARSE_ERR"
 			} else if outCmd.Success() {
@@ -97,15 +64,10 @@ func endpoint(ctx edgex.Context) error {
 			log.Debug("响应码: " + hex.EncodeToString(buffer))
 		})
 		return endpoint.NextMessage(nodeName, []byte(reply))
-	})
-
-	endpoint.Startup()
-	defer endpoint.Shutdown()
-
-	return ctx.TermAwait()
+	}
 }
 
-func nodeFunc(serialNum uint32, doorCount int) func() edgex.MainNode {
+func FuncEndpointNode(serialNum uint32, doorCount int) func() edgex.MainNode {
 	deviceOf := func(doorId int) *edgex.VirtualNode {
 		// Address 可以自动从环境变量中获取
 		return &edgex.VirtualNode{
@@ -124,9 +86,27 @@ func nodeFunc(serialNum uint32, doorCount int) func() edgex.MainNode {
 		}
 		return edgex.MainNode{
 			NodeType:     edgex.NodeTypeEndpoint,
-			Vendor:       wiegand.VendorName,
-			ConnDriver:   wiegand.ConnectionDriver,
+			Vendor:       VendorName,
+			ConnDriver:   ConnectionDriver,
 			VirtualNodes: nodes,
 		}
 	}
+}
+
+func tryWrite(conn *net.UDPConn, bs []byte, to time.Duration) error {
+	if err := conn.SetWriteDeadline(time.Now().Add(to)); nil != err {
+		return err
+	}
+	if _, err := conn.Write(bs); nil != err {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func tryRead(conn *net.UDPConn, buffer []byte, to time.Duration) (n int, err error) {
+	if err := conn.SetReadDeadline(time.Now().Add(to)); nil != err {
+		return 0, err
+	}
+	return conn.Read(buffer)
 }

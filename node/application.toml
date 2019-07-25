@@ -1,0 +1,16 @@
+NodeName = "WiegandNode"
+RpcAddress = "0.0.0.0:5570"
+Topic = "wiegand/events"
+
+# 主板配置参数
+[BoardOptions]
+  serialNumber = 123456
+  doorCount = 4
+
+# UDP服务端配置
+[UdpServerOptions]
+  listenAddress = "0.0.0.0:6670"
+
+# UDP客户端配置参数
+[UdpClientOptions]
+  remoteAddress = "192.168.1.12:60000"

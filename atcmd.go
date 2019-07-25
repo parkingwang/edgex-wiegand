@@ -1,10 +1,9 @@
-package main
+package wiegand
 
 import (
 	"errors"
 	"fmt"
 	"github.com/albenik/bcd"
-	"github.com/nextabc-lab/edgex-wiegand"
 	"github.com/parkingwang/go-wg26"
 	"github.com/yoojia/go-at"
 	"github.com/yoojia/go-bytes"
@@ -15,14 +14,14 @@ import (
 // Author: 陈哈哈 yoojiachen@gmail.com
 //
 
-func atCommands(registry *at.AtRegister, broadSN uint32) {
+func AtCommands(registry *at.AtRegister, broadSN uint32) {
 	// AT+OPEN=SWITCH_ID
 	registry.AddX("OPEN", 1, func(args ...string) ([]byte, error) {
 		switchId, err := parseInt(args[0])
 		if nil != err {
 			return nil, errors.New("INVALID_SWITCH_ID:" + args[0])
 		}
-		return wiegand.NewCommand(wiegand.FunIdRemoteOpen,
+		return NewCommand(FunIdRemoteOpen,
 				broadSN,
 				0,
 				[32]byte{byte(switchId)}).Bytes(),
@@ -41,13 +40,13 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 		if 0 > seconds || seconds > 60 {
 			return nil, errors.New(fmt.Sprintf("INVALID_DELAY_SEC: %d", seconds))
 		}
-		return wiegand.NewCommand(wiegand.FunIdSwitchDelay,
+		return NewCommand(FunIdSwitchDelay,
 				broadSN,
 				0,
 				[32]byte{
-					byte(switchId),                  // 门号
-					wiegand.SwitchDelayAlwaysOnline, // 控制方式
-					byte(seconds),                   //开门延时：秒
+					byte(switchId),          // 门号
+					SwitchDelayAlwaysOnline, // 控制方式
+					byte(seconds),           //开门延时：秒
 				}).Bytes(),
 			nil
 	})
@@ -58,7 +57,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
 		// 东控卡号使用的是 WG26SN 对应的字面数值
-		w := bytes.NewWriter(wiegand.ByteOrder)
+		w := bytes.NewWriter(ByteOrder)
 		w.NextUint32(wg26.ParseFromCardNumber(cardSN).ValueOfWg26SN())
 		w.NextBytes(getDateOrDefault(args, 1, 20190101))
 		w.NextBytes(getDateOrDefault(args, 2, 20291231)) // 20290101
@@ -68,7 +67,7 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 		w.NextByte(byte(getIntOrDefault(args, 6, 1)))
 		data := [32]byte{}
 		copy(data[:], w.Bytes())
-		return wiegand.NewCommand(wiegand.FunIdCardAdd, broadSN, 0, data).Bytes(),
+		return NewCommand(FunIdCardAdd, broadSN, 0, data).Bytes(),
 			nil
 	}
 	registry.AddX("ADD", 1, addHandler)
@@ -81,17 +80,17 @@ func atCommands(registry *at.AtRegister, broadSN uint32) {
 			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
 		// 卡号使用的是 WG26SN 对应的字面数值
-		w := bytes.NewWriter(wiegand.ByteOrder)
+		w := bytes.NewWriter(ByteOrder)
 		w.NextUint32(wg26.ParseFromCardNumber(cardSN).ValueOfWg26SN())
 		data := [32]byte{}
 		copy(data[:], w.Bytes())
-		return wiegand.NewCommand(wiegand.FunIdCardDel, broadSN, 0, data).Bytes(),
+		return NewCommand(FunIdCardDel, broadSN, 0, data).Bytes(),
 			nil
 	})
 
 	// AT+CLEAR
 	registry.AddX("CLEAR", 0, func(args ...string) ([]byte, error) {
-		return wiegand.NewCommand(wiegand.FunIdCardClear, broadSN, 0, [32]byte{0x55, 0xAA, 0xAA, 0x55}).Bytes(),
+		return NewCommand(FunIdCardClear, broadSN, 0, [32]byte{0x55, 0xAA, 0xAA, 0x55}).Bytes(),
 			nil
 	})
 }

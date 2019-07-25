@@ -1,8 +1,7 @@
-package main
+package wiegand
 
 import (
 	"fmt"
-	"github.com/nextabc-lab/edgex-wiegand"
 	"github.com/parkingwang/go-wg26"
 	"github.com/yoojia/go-jsonx"
 )
@@ -20,7 +19,7 @@ import (
 // 01
 // fb 7c 83 00
 // 2019 06 13 17 070306010100000000000000170703000000000000000000000019061300000000000000000000
-func cmdToJSON(cmd *wiegand.Command) (frames []byte, cardNum string, doorId, direct, rType byte) {
+func EventToCard(cmd *Command) (frames []byte, cardNum string, doorId, direct, rType byte) {
 	// 控制指令数据
 	json := jsonx.NewFatJSON()
 	json.Field("sn", cmd.SerialNum)
@@ -29,7 +28,7 @@ func cmdToJSON(cmd *wiegand.Command) (frames []byte, cardNum string, doorId, dir
 	json.Field("index", reader.NextUint32())
 	rType = reader.NextByte()
 	json.Field("type", rType)
-	json.Field("typeName", wiegand.TypeName(rType))
+	json.Field("typeName", TypeName(rType))
 	json.Field("state", reader.NextByte())
 	doorId = reader.NextByte()
 	direct = reader.NextByte()
@@ -38,6 +37,6 @@ func cmdToJSON(cmd *wiegand.Command) (frames []byte, cardNum string, doorId, dir
 	id := wg26.ParseFromWg26Number(fmt.Sprintf("%d", card))
 	json.Field("card", id.CardSN)
 	json.Field("doorId", doorId)
-	json.Field("direct", wiegand.DirectName(direct))
+	json.Field("direct", DirectName(direct))
 	return json.Bytes(), id.CardSN, doorId, direct, rType
 }
