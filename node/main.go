@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/nextabc-lab/edgex-go"
 	"github.com/nextabc-lab/edgex-wiegand"
@@ -13,13 +14,21 @@ import (
 // Author: 陈哈哈 yoojiachen@gmail.com
 //
 
+const (
+	evioUdpProto = "udp-net"
+)
+
 func main() {
 	edgex.Run(wiegrandApp)
 }
 
 func wiegrandApp(ctx edgex.Context) error {
-	config := ctx.LoadConfig()
-	nodeName := value.Of(config["NodeName"]).String()
+	fileName := flag.String("c", edgex.DefaultConfName, "config file name")
+	config := ctx.LoadConfigByName(*fileName)
+	// Init
+	log := ctx.Log()
+	ctx.InitialWithConfig(config)
+
 	rpcAddress := value.Of(config["RpcAddress"]).String()
 	eventTopic := value.Of(config["Topic"]).String()
 
@@ -28,12 +37,7 @@ func wiegrandApp(ctx edgex.Context) error {
 	serialNumber := uint32(value.Of(boardOpts["serialNumber"]).MustInt64())
 	doorCount := int(value.Of(boardOpts["doorCount"]).Int64OrDefault(4))
 
-	// Init
-	log := ctx.Log()
-	ctx.Initial(nodeName)
-
 	trigger := ctx.NewTrigger(edgex.TriggerOptions{
-		NodeName:        nodeName,
 		Topic:           eventTopic,
 		AutoInspectFunc: wiegand.FuncTriggerNode(serialNumber, doorCount),
 	})
@@ -44,15 +48,14 @@ func wiegrandApp(ctx edgex.Context) error {
 
 	// Endpoint 远程控制服务
 	// 使用UDP客户端连接
-	sockOpts := value.Of(config["UdpClientOptions"]).MustMap()
-	remoteAddress := value.Of(sockOpts["remoteAddress"]).String()
-	log.Debugf("连接UDP主板地址: udp://%s", remoteAddress)
+	udpOpts := value.Of(config["UdpClientOptions"]).MustMap()
+	remoteAddress := value.Of(udpOpts["remoteAddress"]).String()
+	log.Debugf("连接UDP主板地址: %s://%s", evioUdpProto, remoteAddress)
 	conn, err := makeUdpConn(remoteAddress)
 	if nil != err {
 		return err
 	}
 	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
-		NodeName:        nodeName,
 		RpcAddr:         rpcAddress,
 		SerialExecuting: true, // 微耕品牌设置不支持并发处理
 		AutoInspectFunc: wiegand.FuncEndpointNode(serialNumber, doorCount),
@@ -65,7 +68,7 @@ func wiegrandApp(ctx edgex.Context) error {
 	server.NumLoops = 1
 	server.Data = wiegand.FuncTriggerHandler(ctx, trigger, serialNumber)
 	opts := value.Of(config["UdpServerOptions"]).MustMap()
-	address := fmt.Sprintf("udp://%s", value.Of(opts["listenAddress"]).String())
+	address := fmt.Sprintf("%s://%s", evioUdpProto, value.Of(opts["listenAddress"]).String())
 	log.Debug("开启UDP服务监听: ", address)
 	defer log.Debug("停止UDP服务端")
 
