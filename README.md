@@ -1,54 +1,72 @@
 # EdgeX-Wiegand 微耕品牌设备驱动
 
-包括两个微耕品牌驱动程序：
-
-1. `endpoint`：接受AT指令控制，执行后返回响应结果的输出终端驱动；
-1. `trigger`：接受微耕硬件UDP通讯数据的触发器，可以将微耕的刷卡事件返回到系统内部；
-
-## 其它品牌
-
 可以支持微耕OEM/ODM的其它品牌门禁设备。已知如下：
 
 1. 东控智能
 
-## Endpoint - 控制终端
+----
 
-接受AT控制指令的输出操作终端驱动。
+## 配置参考
 
-> endpoint-wiegand
-
-**程序参考配置** `/etc/edgex/application.toml`
+以下为完整的配置参考文件：
 
 ```toml
-NodeName = "WiegandEndpoint"
-RpcAddress = "0.0.0.0:5570"
-Broadcast = false
+NodeName = "WiegandNode"
+RpcAddress = "0.0.0.0:5577"
+Topic = "wiegand/events"
 
-# 微耕主板配置参数
+# 主板配置参数
 [BoardOptions]
-  serialNumber = 223177933
+  serialNumber = 123456
   doorCount = 2
 
-# Socket客户端配置参数
-[SocketClientOptions]
-  remoteAddress = "192.168.1.50:60000"
-  readTimeout = "1s"
-  writeTimeout = "1s"
+# UDP服务端配置
+[UdpServerOptions]
+  listenAddress = "0.0.0.0:6670"
+
+# UDP客户端配置参数
+[UdpClientOptions]
+  remoteAddress = "192.168.1.12:60000"
+
 ```
 
-配置说明：
+| 参数 | 格式 | 必填 | 说明 |
+|-----|-----|-----|-----|
+| NodeName | string | 是 | 节点名称。NodeName必须与其它节点不同。 |
+| RpcAddress | string | 是 | gRPC绑定通讯地址 |
+| Topic | string | 是 | 节点接收到数据后，发送的MQTT主题名称。 |
+| BoardOptions.serialNumber | int | 是 | 微耕驱动的主板序列号 |
+| BoardOptions.doorCount | int | 是 | 主板支持的门锁数量 |
+| UdpServerOptions.listenAddress | string | 是 | UDP监听地址及端口，微耕主板连接到此端口来上报数据 |
+| UdpClientOptions.remoteAddress | string | 是 | UDP控制端地址及端口，节点向此地址发送控制指令 |
 
-- `NodeName` 节点名称，须保证项目内部唯一性；
-- `RpcAddress` gRPC绑定地址；通过gRPC控制设备时的通讯地址；
-- `Broadcast` Endpoint设备设置为广播模式时，在接收控制指令并处理后，将不读取设备的响应结果，直接返回成功。
-- `BoardOptions.serialNumber` 微耕控制器的序列号。
-- `BoardOptions.doorCount` 微耕控制器的控制门数量。
-- `SocketClientOptions.remoteAddress` 微耕控制器的UDP通讯地址及端口。
+**全局配置说明**
 
+全局参数配置，以及MQTT相关选项的参数配置，
+参见：[EdgeX-Go](https://github.com/nextabc-lab/edgex-go) 相关文件说明。
+
+
+#### 配置文件位置
+
+配置文件默认文件名为`application.toml`，可以放在以下位置，并按以下顺序搜索：
+
+1. 运行目录下；
+2. 目录：`/etc/edgex/`下；
+3. 环境变量`EDGEX_CONFIG`指定的完整路径；
+
+**修改配置文件名称**
+
+通过运行时指定参数 `-c` 来修改默认文件名。注意，目录搜索依然按以上描述顺序。例如：
+
+```bash
+$ ./edgenode-wierand -c wiegand.toml
+```
 
 ----
 
 ### AT指令列表
+
+通过gRPC服务，可以向节点发送控制指令。
 
 #### AT+OPEN - 远程开关
 
@@ -112,60 +130,7 @@ Broadcast = false
 
 ----
 
-## Trigger - 事件触发器
-
-**程序配置**
-
-```toml
-# 顶级必要的配置参数
-NodeName = "WiegandTrigger"
-Topic = "wiegand/events"
-
-# SocketServer配置参数
-[SocketServerOptions]
-  address = [
-      "udp://0.0.0.0:5570"
-  ]
-```
-
-
-配置说明：
-
-- `NodeName` 设备名称，在项目内部每个设备名称必须保持唯一性；
-- `Topic` 每个Trigger都必须指定一个Topic；不得以`/`开头；
-- `SocketServerOptions.address` 服务端监听地址列表；可监听多个地址；
-
-#### 程序说明
-
-Trigger启动后，等待微耕控制器连接到程序的UDP服务端，并接收其刷卡广播数据。
-接收到刷卡数据后，将数据生成以下JSON格式数据包，以指定的Topic发送到MQTT服务器。
-
-消息Name格式：
-
-> TRIGGER-{serialNumber}-{doorId]-{direct}
-
-消息数据格式：
-
-```json
-{
-  "sn": 123,
-  "card": "0005653307",
-  "index": 123,
-  "type": 1,
-  "typeName": "CARD",
-  "doorId": 1,
-  "direct": "IN",
-  "state": 1
-}
-```
-
-- `sn` 设备序列号；
-- `card` 卡号，卡号原始10位数字。
-- `doorId` 刷卡门号；
-- `direct` 进出方向；
-- `state` 刷卡状态；
-
-## 参考资料
+## 微耕门禁主板通讯协议
 
 1. [短报文格式_操作实例](WG-proto-operator.pdf)
 1. [短报文格式](WG-proto.pdf)
