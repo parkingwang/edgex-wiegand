@@ -29,7 +29,6 @@ func wiegrandApp(ctx edgex.Context) error {
 	log := ctx.Log()
 	ctx.InitialWithConfig(config)
 
-	rpcAddress := value.Of(config["RpcAddress"]).String()
 	eventTopic := value.Of(config["Topic"]).String()
 
 	// 主板参数
@@ -56,11 +55,9 @@ func wiegrandApp(ctx edgex.Context) error {
 		return err
 	}
 	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
-		RpcAddr:         rpcAddress,
-		SerialExecuting: true, // 微耕品牌设置不支持并发处理
 		AutoInspectFunc: wiegand.FuncEndpointNode(serialNumber, doorCount),
 	})
-	endpoint.Serve(wiegand.FuncEndpointHandler(ctx, endpoint, atRegistry, conn))
+	endpoint.Serve(wiegand.FuncEndpointHandler(ctx, atRegistry, conn))
 
 	// Trigger 事件监听服务
 	// 使用Socket服务端接收消息

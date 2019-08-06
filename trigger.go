@@ -15,7 +15,7 @@ import (
 const (
 	// 设备地址格式：　READER - 序列号 - 门号 - 方向
 	// 门禁设备，一个门对应两个输入端
-	readerNodeIdFormat = "READER:%d:%d:%s"
+	readerVirtualIdFormat = "READER-%d-%d-%s"
 )
 
 // 创建Trigger处理函数
@@ -44,7 +44,7 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 		// 控制指令数据：
 		bytes, card, doorId, direct, rType := EventToCard(cmd)
 		// 最后执行控制指令：刷卡数据
-		virtualNodeId := fmt.Sprintf(readerNodeIdFormat, cmd.SerialNum, doorId, DirectName(direct))
+		virtualNodeId := fmt.Sprintf(readerVirtualIdFormat, cmd.SerialNum, doorId, DirectName(direct))
 		log.Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", virtualNodeId, card, TypeName(rType))
 		if rType != 1 {
 			log.Debug("接收到非刷卡类型数据")
@@ -60,24 +60,24 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 }
 
 // 创建Trigger节点消息函数
-func FuncTriggerNode(serialNum uint32, doorCount int) func() edgex.MainNode {
-	deviceOf := func(doorId, direct int) *edgex.VirtualNode {
+func FuncTriggerNode(serialNum uint32, doorCount int) func() edgex.MainNodeInfo {
+	deviceOf := func(doorId, direct int) *edgex.VirtualNodeInfo {
 		directName := DirectName(byte(direct))
-		return &edgex.VirtualNode{
-			NodeId:  fmt.Sprintf(readerNodeIdFormat, serialNum, doorId, directName),
-			Major:   fmt.Sprintf("%d:%d", serialNum, doorId),
-			Minor:   directName,
-			Desc:    fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
-			Virtual: true,
+		return &edgex.VirtualNodeInfo{
+			VirtualId: fmt.Sprintf(readerVirtualIdFormat, serialNum, doorId, directName),
+			MajorId:   fmt.Sprintf("%d:%d", serialNum, doorId),
+			MinorId:   directName,
+			Desc:      fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
+			Virtual:   true,
 		}
 	}
-	return func() edgex.MainNode {
-		nodes := make([]*edgex.VirtualNode, doorCount*2)
+	return func() edgex.MainNodeInfo {
+		nodes := make([]*edgex.VirtualNodeInfo, doorCount*2)
 		for d := 0; d < doorCount; d++ {
 			nodes[d*2] = deviceOf(d+1, DirectIn)
 			nodes[d*2+1] = deviceOf(d+1, DirectOut)
 		}
-		return edgex.MainNode{
+		return edgex.MainNodeInfo{
 			NodeType:     edgex.NodeTypeTrigger,
 			Vendor:       VendorName,
 			ConnDriver:   ConnectionDriver,

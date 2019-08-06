@@ -1,5 +1,4 @@
-NodeName = "WiegandNode"
-RpcAddress = "0.0.0.0:5577"
+NodeId = "WiegandNodeTest"
 Topic = "wiegand/events"
 
 # 主板配置参数
