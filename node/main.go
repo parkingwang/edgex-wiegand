@@ -38,7 +38,7 @@ func wiegrandApp(ctx edgex.Context) error {
 
 	trigger := ctx.NewTrigger(edgex.TriggerOptions{
 		Topic:           eventTopic,
-		AutoInspectFunc: wiegand.FuncTriggerNode(serialNumber, doorCount),
+		AutoInspectFunc: wiegand.FuncTriggerProperties(serialNumber, doorCount),
 	})
 
 	// AT指令解析
