@@ -37,8 +37,8 @@ func wiegrandApp(ctx edgex.Context) error {
 	doorCount := int(value.Of(boardOpts["doorCount"]).Int64OrDefault(4))
 
 	trigger := ctx.NewTrigger(edgex.TriggerOptions{
-		Topic:           eventTopic,
-		AutoInspectFunc: wiegand.FuncTriggerProperties(serialNumber, doorCount),
+		Topic:              eventTopic,
+		NodePropertiesFunc: wiegand.FuncTriggerProperties(serialNumber, doorCount),
 	})
 
 	// AT指令解析
@@ -55,7 +55,7 @@ func wiegrandApp(ctx edgex.Context) error {
 		return err
 	}
 	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
-		AutoInspectFunc: wiegand.FuncEndpointNode(serialNumber, doorCount),
+		NodePropertiesFunc: wiegand.FuncEndpointProperties(serialNumber, doorCount),
 	})
 	endpoint.Serve(wiegand.FuncEndpointHandler(ctx, atRegistry, conn))
 

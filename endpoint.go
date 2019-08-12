@@ -67,7 +67,7 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net
 	}
 }
 
-func FuncEndpointNode(serialNum uint32, doorCount int) func() edgex.MainNodeProperties {
+func FuncEndpointProperties(serialNum uint32, doorCount int) func() edgex.MainNodeProperties {
 	deviceOf := func(doorId int) *edgex.VirtualNodeProperties {
 		return &edgex.VirtualNodeProperties{
 			VirtualId:   fmt.Sprintf(switchVirtualIdFormat, serialNum, doorId),
