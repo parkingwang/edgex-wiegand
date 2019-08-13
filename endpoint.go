@@ -28,7 +28,7 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net
 		log.Debug("接收到控制指令: " + atCmd)
 		cmd, err := atRegistry.Apply(atCmd)
 		if nil != err {
-			return []byte("EX=ERR:BAD_CMD:" + err.Error())
+			return []byte("EX=ERR:UNKNOWN_CMD:" + err.Error())
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
 			log.Debug("微耕指令码: " + hex.EncodeToString(cmd))
@@ -54,9 +54,9 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net
 				log.Error("解析响应数据出错", err)
 				reply = "EX=ERR:PARSE_ERR"
 			} else if outCmd.Success() {
-				reply = "EX=OK"
+				reply = "EX=OK:SUCCESS"
 			} else {
-				reply = "EX=ERR:NOT_OK"
+				reply = "EX=ERR:FAILED"
 			}
 		}
 		log.Debug("接收到控制响应: " + reply)
@@ -69,6 +69,7 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net
 
 func FuncEndpointProperties(serialNum uint32, doorCount int) func() edgex.MainNodeProperties {
 	deviceOf := func(doorId int) *edgex.VirtualNodeProperties {
+		cmd := fmt.Sprintf("AT+OPEN=%d", doorId)
 		return &edgex.VirtualNodeProperties{
 			VirtualId:   fmt.Sprintf(switchVirtualIdFormat, serialNum, doorId),
 			MajorId:     fmt.Sprintf("%d", serialNum),
@@ -76,7 +77,8 @@ func FuncEndpointProperties(serialNum uint32, doorCount int) func() edgex.MainNo
 			Description: fmt.Sprintf("%d号门-控制开关", doorId),
 			Virtual:     true,
 			StateCommands: map[string]string{
-				"TRIGGER": fmt.Sprintf("AT+OPEN=%d", doorId),
+				"TRIGGER": cmd,
+				"OPEN":    cmd,
 			},
 		}
 	}
