@@ -57,7 +57,7 @@ func wiegrandApp(ctx edgex.Context) error {
 	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
 		NodePropertiesFunc: wiegand.FuncEndpointProperties(serialNumber, doorCount),
 	})
-	endpoint.Serve(wiegand.FuncEndpointHandler(ctx, atRegistry, conn))
+	endpoint.Serve(wiegand.FuncEndpointHandler(ctx, endpoint, atRegistry, conn))
 
 	// Trigger 事件监听服务
 	// 使用Socket服务端接收消息
