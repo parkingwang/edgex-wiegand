@@ -50,7 +50,7 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 			log.Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
 		}
-		if err := trigger.PublishEvent(virtualNodeId, bytes); nil != err {
+		if err := trigger.PublishEvent(virtualNodeId, bytes, trigger.GenerateEventId()); nil != err {
 			log.Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
 		} else {

@@ -19,22 +19,24 @@ const (
 	switchVirtualIdFormat = "SWITCH-%d-%d"
 )
 
-func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net.UDPConn) func(msg edgex.Message) (out []byte) {
+func FuncEndpointHandler(ctx edgex.Context, endpoint edgex.Endpoint, atRegistry *at.AtRegister, conn *net.UDPConn) func(msg edgex.Message) (out []byte) {
 	log := ctx.Log()
 	buffer := make([]byte, 64)
 	return func(msg edgex.Message) (out []byte) {
 		atCmd := string(msg.Body())
+		eventId := msg.EventId()
+		vnId := msg.VirtualNodeId()
 
 		log.Debug("接收到控制指令: " + atCmd)
-		cmd, err := atRegistry.Apply(atCmd)
+		vendorCommand, err := atRegistry.Apply(atCmd)
 		if nil != err {
 			return []byte("EX=ERR:UNKNOWN_CMD:" + err.Error())
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("微耕指令码: " + hex.EncodeToString(cmd))
+			log.Debug("微耕指令码: " + hex.EncodeToString(vendorCommand))
 		})
 		// Write
-		if err := tryWrite(conn, cmd, ioTimeout); nil != err {
+		if err := tryWrite(conn, vendorCommand, ioTimeout); nil != err {
 			return []byte("EX=ERR:WRITE:" + err.Error())
 		}
 		// Read
@@ -49,12 +51,14 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net
 		}
 		// parse
 		reply := "EX=ERR:NO_REPLY"
+		success := false
 		if n > 0 {
 			if outCmd, err := ParseCommand(buffer); nil != err {
 				log.Error("解析响应数据出错", err)
 				reply = "EX=ERR:PARSE_ERR"
 			} else if outCmd.Success() {
 				reply = "EX=OK:SUCCESS"
+				success = true
 			} else {
 				reply = "EX=ERR:FAILED"
 			}
@@ -63,6 +67,19 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
 			log.Debug("响应码: " + hex.EncodeToString(buffer))
 		})
+		// 设备被驱动后，发出Action消息广播。用于联动。
+		go func() {
+			action := "ACT:"
+			if success {
+				action += "SUCCESS"
+			} else {
+				action += "FAILED"
+			}
+			if err := endpoint.PublishActionMessage(
+				endpoint.NewMessageOf(vnId, []byte(action), eventId)); nil != err {
+				log.Error("发出Action广播出错：", err)
+			}
+		}()
 		return []byte(reply)
 	}
 }
