@@ -12,12 +12,6 @@ import (
 // Author: 陈哈哈 yoojiachen@gmail.com
 //
 
-const (
-	// 设备地址格式：　READER - 序列号 - 门号 - 方向
-	// 门禁设备，一个门对应两个输入端
-	readerVirtualIdFormat = "READER-%d-%d-%s"
-)
-
 // 创建Trigger处理函数
 func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber uint32) func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
 	log := ctx.Log()
@@ -44,13 +38,16 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 		// 控制指令数据：
 		bytes, card, doorId, direct, rType := EventToCard(cmd)
 		// 最后执行控制指令：刷卡数据
-		virtualNodeId := fmt.Sprintf(readerVirtualIdFormat, cmd.SerialNum, doorId, DirectName(direct))
-		log.Debugf("接收到刷卡数据, Device: %s, Card: %s, Type: %s", virtualNodeId, card, TypeName(rType))
+		log.Debugf("接收到刷卡数据, DoorId: %d, Card: %s, Type: %s", doorId, card, TypeName(rType))
 		if rType != 1 {
 			log.Debug("接收到非刷卡类型数据")
 			return []byte("EX=ERR:IGNORE_RECORD_TYPE"), action
 		}
-		if err := trigger.PublishEvent(virtualNodeId, bytes, trigger.GenerateEventId()); nil != err {
+		if err := trigger.PublishEvent(
+			makeGroupId(serialNumber),
+			makeMajorId(int(doorId)),
+			DirectName(direct),
+			bytes, trigger.GenerateEventId()); nil != err {
 			log.Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
 		} else {
@@ -64,10 +61,10 @@ func FuncTriggerProperties(serialNum uint32, doorCount int) func() edgex.MainNod
 	deviceOf := func(doorId, direct int) *edgex.VirtualNodeProperties {
 		directName := DirectName(byte(direct))
 		return &edgex.VirtualNodeProperties{
-			VirtualId:   fmt.Sprintf(readerVirtualIdFormat, serialNum, doorId, directName),
-			MajorId:     fmt.Sprintf("%d:%d", serialNum, doorId),
+			GroupId:     makeGroupId(serialNum),
+			MajorId:     makeMajorId(doorId),
 			MinorId:     directName,
-			Description: fmt.Sprintf("%d号门-%s-读卡器", doorId, directName),
+			Description: fmt.Sprintf("控制器#%d-%d号门-%s", serialNum, doorId, directName),
 			Virtual:     true,
 		}
 	}

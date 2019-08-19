@@ -15,11 +15,10 @@ import (
 //
 
 const (
-	ioTimeout             = time.Second * 3
-	switchVirtualIdFormat = "SWITCH-%d-%d"
+	ioTimeout = time.Second * 3
 )
 
-func FuncEndpointHandler(ctx edgex.Context, endpoint edgex.Endpoint, atRegistry *at.AtRegister, conn *net.UDPConn) func(msg edgex.Message) (out []byte) {
+func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.AtRegister, conn *net.UDPConn) func(msg edgex.Message) (out []byte) {
 	log := ctx.Log()
 	buffer := make([]byte, 64)
 	return func(msg edgex.Message) (out []byte) {
@@ -71,10 +70,10 @@ func FuncEndpointProperties(serialNum uint32, doorCount int) func() edgex.MainNo
 	deviceOf := func(doorId int) *edgex.VirtualNodeProperties {
 		cmd := fmt.Sprintf("AT+OPEN=%d", doorId)
 		return &edgex.VirtualNodeProperties{
-			VirtualId:   fmt.Sprintf(switchVirtualIdFormat, serialNum, doorId),
-			MajorId:     fmt.Sprintf("%d", serialNum),
-			MinorId:     fmt.Sprintf("%d", doorId),
-			Description: fmt.Sprintf("%d号门-控制开关", doorId),
+			GroupId:     makeGroupId(serialNum),
+			MajorId:     makeMajorId(doorId),
+			MinorId:     "SW",
+			Description: fmt.Sprintf("控制器#%d-%d号门-开关", serialNum, doorId),
 			Virtual:     true,
 			StateCommands: map[string]string{
 				"TRIGGER": cmd,
