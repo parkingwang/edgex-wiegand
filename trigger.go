@@ -24,6 +24,7 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 			log.Debugf("接收到非微耕数据格式数据: ERR= %s, DATA= %v", err.Error(), in)
 			return []byte("EX=ERR:INVALID_DK_DATA"), action
 		}
+		// TODO 其它事件：1. 按钮开门事件；2. 报警事件；
 		// 非监控数据，忽略
 		if cmd.FuncId != FunIdBoardState {
 			log.Debugf("只处理监控事件，忽略: FunId= %x", cmd.FuncId)
