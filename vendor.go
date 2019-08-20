@@ -16,5 +16,5 @@ func makeGroupId(serialNum uint32) string {
 }
 
 func makeMajorId(doorId int) string {
-	return fmt.Sprintf("SNID[%d]", doorId)
+	return fmt.Sprintf("DOOR[%d]", doorId)
 }
