@@ -40,11 +40,6 @@ const (
 	SwitchDelayAlwaysOnline = 0x03 // 在线控制，默认方式
 )
 
-const (
-	DirectIn  = 1
-	DirectOut = 2
-)
-
 // 微耕门禁主板指令
 type Command struct {
 	Magic     byte     // 1
@@ -127,32 +122,4 @@ func ParseCommand(frame []byte) (*Command, error) {
 		data,
 		extra,
 	), nil
-}
-
-// 解析进出方向类型名称
-func DirectName(b byte) string {
-	if 1 == b {
-		return "IN"
-	} else {
-		return "OUT"
-	}
-}
-
-// 解析记录类型名称
-func TypeName(b byte) string {
-	switch b {
-	case 0:
-		return "NOP" // 无记录
-	case 1:
-		return "CARD" // 刷卡
-
-	case 2:
-		return "ACTION" // 门磁，按钮，设备启动，远程开门
-
-	case 3:
-		return "ALARM" // 报警
-
-	default:
-		return "NOP"
-	}
 }
