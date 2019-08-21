@@ -14,10 +14,10 @@ import (
 // Author: 陈哈哈 yoojiachen@gmail.com
 //
 
-func AtCommands(registry *at.AtRegister, broadSN uint32) {
+func AtCommand(registry *at.Registry, broadSN uint32) {
 	// AT+OPEN=SWITCH_ID
-	registry.AddX("OPEN", 1, func(args ...string) ([]byte, error) {
-		switchId, err := parseInt(args[0])
+	registry.AddX("OPEN", 1, func(args at.Args) ([]byte, error) {
+		switchId, err := args.ArgInt64(0)
 		if nil != err {
 			return nil, errors.New("INVALID_SWITCH_ID:" + args[0])
 		}
@@ -28,12 +28,12 @@ func AtCommands(registry *at.AtRegister, broadSN uint32) {
 			nil
 	})
 	// AT+DELAY=SWITCH_ID,DELAY_SEC
-	registry.AddX("DELAY", 2, func(args ...string) ([]byte, error) {
-		switchId, err := parseInt(args[0])
+	registry.AddX("DELAY", 2, func(args at.Args) ([]byte, error) {
+		switchId, err := args.ArgInt64(0)
 		if nil != err {
 			return nil, errors.New("INVALID_SWITCH_ID:" + args[0])
 		}
-		seconds, err := parseInt(args[1])
+		seconds, err := args.ArgInt64(1)
 		if nil != err {
 			return nil, errors.New("INVALID_DELAY_SEC:" + args[1])
 		}
@@ -51,8 +51,8 @@ func AtCommands(registry *at.AtRegister, broadSN uint32) {
 			nil
 	})
 	// AT+ADD=CARD(ID),START_DATE(YYYYMMdd),END_DATE(YYYYMMdd),DOOR1,DOOR2,DOOR3,DOOR4
-	addHandler := func(args ...string) ([]byte, error) {
-		cardSN := args[0]
+	addHandler := func(args at.Args) ([]byte, error) {
+		cardSN, _ := args.ArgString(0)
 		if !wg26.IsCardSN(cardSN) {
 			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
@@ -74,14 +74,14 @@ func AtCommands(registry *at.AtRegister, broadSN uint32) {
 	registry.Add("ADD0", addHandler)
 
 	// AT+DELETE=CARD(ID)
-	registry.AddX("DELETE", 1, func(args ...string) ([]byte, error) {
-		cardSN := args[0]
-		if !wg26.IsCardSN(cardSN) {
+	registry.AddX("DELETE", 1, func(args at.Args) ([]byte, error) {
+		cardNum, _ := args.ArgString(0)
+		if !wg26.IsCardSN(cardNum) {
 			return nil, errors.New("INVALID_CARD_SN[10digits]")
 		}
 		// 卡号使用的是 WG26SN 对应的字面数值
 		w := bytes.NewWriter(ByteOrder)
-		w.NextUint32(wg26.ParseFromCardNumber(cardSN).ValueOfWg26SN())
+		w.NextUint32(wg26.ParseFromCardNumber(cardNum).ValueOfWg26SN())
 		data := [32]byte{}
 		copy(data[:], w.Bytes())
 		return NewCommand(FunIdCardDel, broadSN, 0, data).Bytes(),
@@ -89,7 +89,7 @@ func AtCommands(registry *at.AtRegister, broadSN uint32) {
 	})
 
 	// AT+CLEAR
-	registry.AddX("CLEAR", 0, func(args ...string) ([]byte, error) {
+	registry.AddX("CLEAR", 0, func(args at.Args) ([]byte, error) {
 		return NewCommand(FunIdCardClear, broadSN, 0, [32]byte{0x55, 0xAA, 0xAA, 0x55}).Bytes(),
 			nil
 	})

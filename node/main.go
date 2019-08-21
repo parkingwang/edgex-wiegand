@@ -42,8 +42,8 @@ func wiegrandApp(ctx edgex.Context) error {
 	})
 
 	// AT指令解析
-	atRegistry := at.NewAtRegister()
-	wiegand.AtCommands(atRegistry, serialNumber)
+	registry := at.NewRegistry()
+	wiegand.AtCommand(registry, serialNumber)
 
 	// Endpoint 远程控制服务
 	// 使用UDP客户端连接
@@ -57,7 +57,7 @@ func wiegrandApp(ctx edgex.Context) error {
 	endpoint := ctx.NewEndpoint(edgex.EndpointOptions{
 		NodePropertiesFunc: wiegand.FuncEndpointProperties(serialNumber, doorCount),
 	})
-	endpoint.Serve(wiegand.FuncEndpointHandler(ctx, atRegistry, conn))
+	endpoint.Serve(wiegand.FuncEndpointHandler(ctx, registry, conn))
 
 	// Trigger 事件监听服务
 	// 使用Socket服务端接收消息

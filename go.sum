@@ -10,8 +10,8 @@ github.com/eclipse/paho.mqtt.golang v1.2.0 h1:1F8mhG9+aO5/xpdtFkW4SxOJB67ukuDC3t
 github.com/eclipse/paho.mqtt.golang v1.2.0/go.mod h1:H9keYFcgq3Qr5OUJm/JZI/i6U7joQ8SYLhZwfeOo6Ts=
 github.com/kavu/go_reuseport v1.4.0 h1:YIp/96RZ3sJfn0LN+FFkkXIq3H3dfVOdRUtNejhDcxc=
 github.com/kavu/go_reuseport v1.4.0/go.mod h1:CG8Ee7ceMFSMnx/xr25Vm0qXaj2Z4i5PWoUx+JZ5/CU=
-github.com/nextabc-lab/edgex-go v0.10.1 h1:mmB6nDrEyVPNTJUZSDSX3YxknFxY5fN2chjiLjmyAoc=
-github.com/nextabc-lab/edgex-go v0.10.1/go.mod h1:6LWpz+maSBddK3+uUnJtbd9JepMM0uhbhaS0Lz6ibxg=
+github.com/nextabc-lab/edgex-go v0.11.1 h1:+8esEjeoj8KZHIW/B6jeMw2bN2lmpuPbFYvaiXLuFMc=
+github.com/nextabc-lab/edgex-go v0.11.1/go.mod h1:6LWpz+maSBddK3+uUnJtbd9JepMM0uhbhaS0Lz6ibxg=
 github.com/parkingwang/go-wg26 v0.1.3 h1:QjUBehhvpRrN+0ZC2mnwe5wEkzaA6fJauNz/TFC++BI=
 github.com/parkingwang/go-wg26 v0.1.3/go.mod h1:uqfHBsNSQfbMOqMYAnmMgVrcNUI2B6e1povPZd+AiQw=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
@@ -23,8 +23,8 @@ github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/tidwall/evio v1.0.2 h1:vhPp5nVS5PZfR0CfV5ixqDEf+BKQFcaR1W1XeLLkvRE=
 github.com/tidwall/evio v1.0.2/go.mod h1:cYtY49LddNrlpsOmW7qJnqM8B2gOjrFrzT8+Fnb/GKs=
-github.com/yoojia/go-at v0.1.1 h1:bP1XHlBtopGiy7SiRxTFwAmso6WDp2v+IqDksDRIlJg=
-github.com/yoojia/go-at v0.1.1/go.mod h1:xCXmScyGWWG3pmPcDbSqDGwAME3XjenxjBQIa5JeoR0=
+github.com/yoojia/go-at v0.2.1 h1:k2dbo1bkUCp4va8qKBYJdKIDwNtT8lZN2jcONw8lX1E=
+github.com/yoojia/go-at v0.2.1/go.mod h1:OcePEumAmykQ+OuNRp2SVaQVAC69iPNbg8AwhPGCHGs=
 github.com/yoojia/go-bytes v0.0.2-1 h1:B/O4v5mwLz8mqO4WP30rC8y7cgPAtkb8K7sHsnQ06c8=
 github.com/yoojia/go-bytes v0.0.2-1/go.mod h1:eMZ3hmJzpwxOmwB/t7gpJr4Y99FG/Qq33pwpt47TpcQ=
 github.com/yoojia/go-value v0.1.0 h1:c6w36aO0NBbLIhbiLLbHQnVdXrr76GMmt2nOKUanuEo=

@@ -16,9 +16,8 @@ import (
 //
 
 // 创建Trigger处理函数
-func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber uint32) func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
+func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber uint32) func(evio.Conn, []byte) ([]byte, evio.Action) {
 	log := ctx.Log()
-	log.Debugf("EventId, Zzzzz: %d", trigger.GenerateEventId())
 	return func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
 		cmd, err := ParseCommand(in)
 		if nil != err {
@@ -44,10 +43,9 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 		event := parseCardEvent(cmd)
 		log.Debugf("接收到控制器事件, DoorId: %d, Card: %s, EventType: %s", event.DoorId, event.CardNO, event.Type)
 
-		groupId := makeGroupId(event.BoardId)
+		boardId := makeBoardId(event.BoardId)
 		majorId := makeMajorId(int(event.DoorId))
 		minorId := directName(event.Direct)
-		eventId := trigger.GenerateEventId()
 
 		data, err := json.Marshal(event)
 		if nil != err {
@@ -55,21 +53,36 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 			return []byte("EX=ERR:JSON_ERROR"), action
 		}
 
+		eventId := trigger.GenerateEventId()
 		switch event.Type {
 		case extra.TypeOpen:
-			if err := trigger.PublishAction(groupId, majorId, minorId, data, eventId); nil != err {
+			// 动作事件，获取Endpoint RPC驱动的EventId
+			attrKey := attrKeyRpcEventId(boardId, majorId)
+			if attr, ok := ctx.LoadAttr(attrKey); ok {
+				log.Debugf("触发[OPEN]事件: RPC EventId= %d", attr)
+				if id, ok := attr.(int64); ok {
+					eventId = id
+				} else {
+					log.Errorf("加载Attr.EventId, 但数据格式错误: %v", attr)
+				}
+			} else {
+				log.Debugf("触发[OPEN]事件: NEW EventId= %d", eventId)
+			}
+			if err := trigger.PublishAction(boardId, majorId, minorId, data, eventId); nil != err {
 				log.Error("触发[OPEN]事件出错: ", err)
 				return []byte("EX=ERR:" + err.Error()), action
 			} else {
-				return []byte("EX=OK:OPEN"), action
+				return []byte("EX=OK:EVT_OPEN"), action
 			}
 
 		case extra.TypeCard:
-			if err := trigger.PublishEvent(groupId, majorId, minorId, data, eventId); nil != err {
+			// 刷卡事件，使用新EventID
+			log.Debugf("触发[CARD]事件: EventId= %d", eventId)
+			if err := trigger.PublishEvent(boardId, majorId, minorId, data, eventId); nil != err {
 				log.Error("触发[CARD]事件出错: ", err)
 				return []byte("EX=ERR:" + err.Error()), action
 			} else {
-				return []byte("EX=OK:CARD"), action
+				return []byte("EX=OK:EVT_CARD"), action
 			}
 
 		default:
@@ -81,7 +94,7 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 func parseCardEvent(cmd *Command) extra.CardEvent {
 	reader := cmd.DataReader()
 	idx := reader.NextUint32()
-	aType := reader.NextByte()
+	rType := reader.NextByte()
 	state := reader.NextByte()
 	doorId := reader.NextByte()
 	direct := reader.NextByte()
@@ -92,7 +105,7 @@ func parseCardEvent(cmd *Command) extra.CardEvent {
 		DoorId:    doorId,
 		Direct:    directVal(direct),
 		CardNO:    wg26.ParseFromCardNumber(fmt.Sprintf("%d", card)).CardSN,
-		Type:      typeName(aType),
+		Type:      typeName(rType),
 		State:     stateName(state),
 		Index:     idx,
 	}
@@ -102,10 +115,11 @@ func parseCardEvent(cmd *Command) extra.CardEvent {
 func FuncTriggerProperties(serialNum uint32, doorCount int) func() edgex.MainNodeProperties {
 	deviceOf := func(doorId int, direct string) *edgex.VirtualNodeProperties {
 		return &edgex.VirtualNodeProperties{
-			GroupId:     makeGroupId(serialNum),
+			BoardId:     makeBoardId(serialNum),
 			MajorId:     makeMajorId(doorId),
 			MinorId:     direct,
-			Description: fmt.Sprintf("控制器#%d-%d号门-%s", serialNum, doorId, direct),
+			DeviceType:  "reader",
+			Description: fmt.Sprintf("微耕#%d/%d号门/%s/Reader", serialNum, doorId, direct),
 			Virtual:     true,
 		}
 	}
