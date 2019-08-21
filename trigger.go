@@ -25,46 +25,55 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 			log.Debugf("接收到非微耕数据格式数据: ERR= %s, DATA= %v", err.Error(), in)
 			return []byte("EX=ERR:INVALID_DK_DATA"), action
 		}
-		// TODO 其它事件：1. 按钮开门事件；2. 报警事件；
 		// 非监控数据，忽略
 		if cmd.FuncId != FunIdBoardState {
 			log.Debugf("只处理监控事件，忽略: FunId= %x", cmd.FuncId)
 			return []byte("EX=ERR:INVALID_DK_STATE"), action
 		}
 		// 只接收允许的序列号的数据
-		// TODO 运行多序列号同时接入同一个节点
 		if cmd.SerialNum != serialNumber {
 			log.Debugf("接收到未知序列号数据: SN= %d", cmd.SerialNum)
 			return []byte("EX=ERR:UNKNOWN_BOARD_SN"), action
 		}
+
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("微耕发送事件码: ", hex.EncodeToString(in))
+			log.Debug("微耕原始码: ", hex.EncodeToString(in))
 		})
+
 		// 控制指令数据：
 		event := parseCardEvent(cmd)
 		log.Debugf("接收到控制器事件, DoorId: %d, Card: %s, EventType: %s", event.DoorId, event.CardNO, event.Type)
-		if event.Type != extra.TypeCard {
-			log.Debug("只处理刷卡类型事件，忽略")
-			return []byte("EX=ERR:UNSUPPORTED_TYPE"), action
-		}
+
+		groupId := makeGroupId(event.BoardId)
+		majorId := makeMajorId(int(event.DoorId))
+		minorId := directName(event.Direct)
+		eventId := trigger.GenerateEventId()
+
 		data, err := json.Marshal(event)
 		if nil != err {
 			log.Error("JSON序列化错误", err)
 			return []byte("EX=ERR:JSON_ERROR"), action
 		}
-		log.Debug("发送触发事件")
-		eventId := trigger.GenerateEventId()
-		log.Debugf("触发事件，EventID: %d", eventId)
-		if err := trigger.PublishEvent(
-			makeGroupId(event.BoardId),
-			makeMajorId(int(event.DoorId)),
-			directName(event.Direct),
-			data,
-			eventId); nil != err {
-			log.Error("触发事件出错: ", err)
-			return []byte("EX=ERR:" + err.Error()), action
-		} else {
-			return []byte("EX=OK:ACCEPTED"), action
+
+		switch event.Type {
+		case extra.TypeOpen:
+			if err := trigger.PublishAction(groupId, majorId, minorId, data, eventId); nil != err {
+				log.Error("触发[OPEN]事件出错: ", err)
+				return []byte("EX=ERR:" + err.Error()), action
+			} else {
+				return []byte("EX=OK:OPEN"), action
+			}
+
+		case extra.TypeCard:
+			if err := trigger.PublishEvent(groupId, majorId, minorId, data, eventId); nil != err {
+				log.Error("触发[CARD]事件出错: ", err)
+				return []byte("EX=ERR:" + err.Error()), action
+			} else {
+				return []byte("EX=OK:CARD"), action
+			}
+
+		default:
+			return []byte("EX=ERR:UNSUPPORTED_TYPE"), action
 		}
 	}
 }

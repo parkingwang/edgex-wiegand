@@ -10,8 +10,8 @@ github.com/eclipse/paho.mqtt.golang v1.2.0 h1:1F8mhG9+aO5/xpdtFkW4SxOJB67ukuDC3t
 github.com/eclipse/paho.mqtt.golang v1.2.0/go.mod h1:H9keYFcgq3Qr5OUJm/JZI/i6U7joQ8SYLhZwfeOo6Ts=
 github.com/kavu/go_reuseport v1.4.0 h1:YIp/96RZ3sJfn0LN+FFkkXIq3H3dfVOdRUtNejhDcxc=
 github.com/kavu/go_reuseport v1.4.0/go.mod h1:CG8Ee7ceMFSMnx/xr25Vm0qXaj2Z4i5PWoUx+JZ5/CU=
-github.com/nextabc-lab/edgex-go v0.9.5 h1:t2L96n6fVfQQaTMXUUiGiMS2Hqt1Q8NoGxmvpXO8TUw=
-github.com/nextabc-lab/edgex-go v0.9.5/go.mod h1:6LWpz+maSBddK3+uUnJtbd9JepMM0uhbhaS0Lz6ibxg=
+github.com/nextabc-lab/edgex-go v0.10.1 h1:mmB6nDrEyVPNTJUZSDSX3YxknFxY5fN2chjiLjmyAoc=
+github.com/nextabc-lab/edgex-go v0.10.1/go.mod h1:6LWpz+maSBddK3+uUnJtbd9JepMM0uhbhaS0Lz6ibxg=
 github.com/parkingwang/go-wg26 v0.1.3 h1:QjUBehhvpRrN+0ZC2mnwe5wEkzaA6fJauNz/TFC++BI=
 github.com/parkingwang/go-wg26 v0.1.3/go.mod h1:uqfHBsNSQfbMOqMYAnmMgVrcNUI2B6e1povPZd+AiQw=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
