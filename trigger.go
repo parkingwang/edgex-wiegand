@@ -18,6 +18,7 @@ import (
 // 创建Trigger处理函数
 func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber uint32) func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
 	log := ctx.Log()
+	log.Debugf("EventId, Zzzzz: %d", trigger.GenerateEventId())
 	return func(c evio.Conn, in []byte) (out []byte, action evio.Action) {
 		cmd, err := ParseCommand(in)
 		if nil != err {
@@ -51,12 +52,15 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 			log.Error("JSON序列化错误", err)
 			return []byte("EX=ERR:JSON_ERROR"), action
 		}
+		log.Debug("发送触发事件")
+		eventId := trigger.GenerateEventId()
+		log.Debugf("触发事件，EventID: %d", eventId)
 		if err := trigger.PublishEvent(
 			makeGroupId(event.BoardId),
 			makeMajorId(int(event.DoorId)),
 			directName(event.Direct),
 			data,
-			trigger.GenerateEventId()); nil != err {
+			eventId); nil != err {
 			log.Error("触发事件出错: ", err)
 			return []byte("EX=ERR:" + err.Error()), action
 		} else {
