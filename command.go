@@ -30,7 +30,7 @@ const (
 
 // 微耕Magic位
 const (
-	Magic = 0x19
+	VendorMagic = 0x17
 )
 
 // 开关控制方式
@@ -89,7 +89,7 @@ func NewCommand0(magic, funcId byte, nop uint16, serial uint32, seqId uint32, da
 // 创建指令
 func NewCommand(funcId byte, serialId uint32, seqId uint32, data [32]byte) *Command {
 	return NewCommand0(
-		Magic,
+		VendorMagic,
 		funcId,
 		0x00,
 		serialId,

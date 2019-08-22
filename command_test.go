@@ -35,7 +35,7 @@ func TestCommand_Bytes(t *testing.T) {
 
 func TestParseCommand(t *testing.T) {
 	dk, err := ParseCommand([]byte{
-		0x17,
+		VendorMagic,
 		0x40,
 		0x00, 0x00,
 		0x1D, 0x85, 0xB5, 0x0D,
@@ -44,8 +44,8 @@ func TestParseCommand(t *testing.T) {
 	if nil != err {
 		t.Error(err)
 	}
-	if dk.Magic != 0x17 {
-		t.Error("Magic not match: ", dk.Magic)
+	if dk.Magic != VendorMagic {
+		t.Error("VendorMagic not match: ", dk.Magic)
 	}
 	if dk.SerialNum != 229999901 {
 		t.Error("SN not match:", dk.SerialNum)
