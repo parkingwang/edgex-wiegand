@@ -15,7 +15,7 @@ import (
 //
 
 const (
-	ioTimeout = time.Second * 3
+	ioTimeout = time.Second * 1
 )
 
 func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.Registry, conn *net.UDPConn) func(msg edgex.Message) (out []byte) {
@@ -29,7 +29,7 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.Registry, conn *net.U
 			return []byte("EX=ERR:UNKNOWN_CMD:" + err.Error())
 		}
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("微耕指令码: " + hex.EncodeToString(wgCmd.Payload))
+			log.Debug("发送指令码: " + hex.EncodeToString(wgCmd.Payload))
 		})
 		// Write
 		if err := tryWrite(conn, wgCmd.Payload, ioTimeout); nil != err {
@@ -40,7 +40,7 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.Registry, conn *net.U
 		for i := 0; i < 5; i++ {
 			if read, err = tryRead(conn, buffer, ioTimeout); nil != err {
 				log.Errorf("读取设备响应数据出错[%d]: %s", i, err.Error())
-				<-time.After(time.Millisecond * 200)
+				<-time.After(time.Millisecond * 5)
 			} else {
 				break
 			}
@@ -48,26 +48,25 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.Registry, conn *net.U
 		// 如果是[Open]等指令，共享EventId
 		attrKey := attrKeyRpcEventId(msg.BoardId(), msg.MajorId())
 		if "OPEN" == wgCmd.Name {
-			log.Debugf("共享Attr.RPCEventId: %d", msg.EventId())
+			log.Debugf("共享RPC.EventId: %d", msg.EventId())
 			ctx.StoreAttr(attrKey, msg.EventId())
 		} else {
 			ctx.RemoveAttr(attrKey)
 		}
 		// parse out
-		out := "EX=ERR:NO_REPLY"
+		out := "EX=ERR:NO_RESPONSE"
 		if read > 0 {
-			if outCmd, err := ParseCommand(buffer); nil != err {
+			if reply, err := ParseCommand(buffer); nil != err {
 				log.Error("解析响应数据出错", err)
 				out = "EX=ERR:PARSE_ERR"
-			} else if outCmd.Success() {
+			} else if reply.Success() {
 				out = "EX=OK:SUCCESS"
 			} else {
 				out = "EX=ERR:FAILED"
 			}
 		}
-		log.Debug("接收到控制响应: " + out)
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("响应码: " + hex.EncodeToString(buffer))
+			log.Debug("接收响应码: " + hex.EncodeToString(buffer))
 		})
 		return []byte(out)
 	}
