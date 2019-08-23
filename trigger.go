@@ -36,12 +36,12 @@ func FuncTriggerHandler(ctx edgex.Context, trigger edgex.Trigger, serialNumber u
 		}
 
 		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("微耕原始码: ", hex.EncodeToString(in))
+			log.Debug("接收事件码: ", hex.EncodeToString(in))
 		})
 
 		// 控制指令数据：
 		event := parseCardEvent(cmd)
-		log.Debugf("接收到控制器事件, DoorId: %d, Card: %s, EventType: %s", event.DoorId, event.CardNO, event.Type)
+		log.Debugf("接收事件, DoorId: %d, Card: %s, Event: %s", event.DoorId, event.CardNO, event.Type)
 
 		boardId := makeBoardId(event.BoardId)
 		majorId := makeMajorId(int(event.DoorId))
