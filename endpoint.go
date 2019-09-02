@@ -15,7 +15,7 @@ import (
 //
 
 const (
-	ioTimeout = time.Second * 1
+	ioTimeout = time.Second * 2
 )
 
 func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.Registry, conn *net.UDPConn) func(msg edgex.Message) (out []byte) {
@@ -33,17 +33,13 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.Registry, conn *net.U
 		})
 		// Write
 		if err := tryWrite(conn, wgCmd.Payload, ioTimeout); nil != err {
-			return []byte("EX=ERR:WRITE:" + err.Error())
+			return []byte("EX=ERR:SEND:" + err.Error())
 		}
 		// Read
-		var read = 0
-		for i := 0; i < 5; i++ {
-			if read, err = tryRead(conn, buffer, ioTimeout); nil != err {
-				log.Errorf("读取设备响应数据出错[%d]: %s", i, err.Error())
-				<-time.After(time.Millisecond * 5)
-			} else {
-				break
-			}
+		read, err := tryRead(conn, buffer, ioTimeout)
+		if nil != err {
+			log.Errorf("读取设备响应数据出错: " + err.Error())
+			return []byte("EX=OK:SEND_OK/RECV_ERR:" + err.Error())
 		}
 		// 如果是[Open]等指令，共享EventId
 		attrKey := attrKeyRpcEventId(msg.BoardId(), msg.MajorId())
@@ -54,21 +50,15 @@ func FuncEndpointHandler(ctx edgex.Context, atRegistry *at.Registry, conn *net.U
 			ctx.RemoveAttr(attrKey)
 		}
 		// parse out
-		out := "EX=ERR:NO_RESPONSE"
-		if read > 0 {
-			if reply, err := ParseCommand(buffer); nil != err {
-				log.Error("解析响应数据出错", err)
-				out = "EX=ERR:PARSE_ERR"
-			} else if reply.Success() {
-				out = "EX=OK:SUCCESS"
-			} else {
-				out = "EX=ERR:FAILED"
-			}
+		data := buffer[:read]
+		if reply, err := ParseCommand(data); nil != err {
+			log.Error("解析响应数据出错", err)
+			return []byte("EX=ERR:PARSE_ERR:" + err.Error())
+		} else if reply.Success() {
+			return []byte("EX=OK:SUCCESS")
+		} else {
+			return []byte("EX=ERR:FAILED")
 		}
-		ctx.LogIfVerbose(func(log *zap.SugaredLogger) {
-			log.Debug("接收响应码: " + hex.EncodeToString(buffer))
-		})
-		return []byte(out)
 	}
 }
 
