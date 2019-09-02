@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/albenik/bcd v0.0.0-20170831201648-635201416bc7
 	github.com/kavu/go_reuseport v1.4.0 // indirect
-	github.com/nextabc-lab/edgex-go v0.11.2
+	github.com/nextabc-lab/edgex-go v0.12.0
 	github.com/parkingwang/go-wg26 v0.1.3
 	github.com/pkg/errors v0.8.1
 	github.com/tidwall/evio v1.0.2
